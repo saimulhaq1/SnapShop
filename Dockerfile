@@ -7,9 +7,9 @@ ENV PYTHONUNBUFFERED 1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies (needed for mysqlclient/psycopg2 if any)
+# Install system dependencies (needed for OpenCV, ML, psycopg2, and curl for healthchecks)
 RUN apt-get update \
-    && apt-get install -y gcc default-libmysqlclient-dev pkg-config \
+    && apt-get install -y gcc default-libmysqlclient-dev libpq-dev pkg-config libgl1-mesa-glx libglib2.0-0 curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies

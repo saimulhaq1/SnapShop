@@ -7,17 +7,28 @@ def create_app():
     flask_app = Flask(__name__)
     flask_app.secret_key = "secret-key-123" 
 
-    # Database Configuration
-    flask_app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:12345@localhost/ecommerce'
-    flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    # Connection pool: reuse DB connections instead of creating new ones each request
-    flask_app.config['SQLALCHEMY_POOL_SIZE'] = 10
-    flask_app.config['SQLALCHEMY_POOL_RECYCLE'] = 280
-    flask_app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
-    flask_app.config['SQLALCHEMY_MAX_OVERFLOW'] = 5
-
-    import os
+    # Production Config Security
+    flask_app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1']
+    flask_app.config['TESTING'] = False
     
+    # Database Configuration
+    database_url = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:12345@localhost/ecommerce')
+    
+    # Fix Neon connection string for SQLAlchemy
+    if database_url and database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+        
+    flask_app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Connection pool: reuse DB connections instead of creating new ones each request
+    flask_app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 10,
+        'pool_recycle': 280,
+        'pool_timeout': 20,
+        'max_overflow': 5,
+    }
+
     # Mail Configuration (Uses environment variables, falls back to placeholders)
     flask_app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     flask_app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
