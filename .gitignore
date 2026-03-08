@@ -1,0 +1,15 @@
+# Environments
+venv/
+env/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# ML/DL Data
+.ipynb_checkpoints
+*.log
+
+# Static files
+/app/static/
