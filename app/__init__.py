@@ -170,4 +170,8 @@ def create_app():
         from app.utils.cron_jobs import register_commands
         register_commands(flask_app)
 
+    # Wrap the built-in WSGI app with WhiteNoise for serving static files in production
+    from whitenoise import WhiteNoise
+    flask_app.wsgi_app = WhiteNoise(flask_app.wsgi_app, root='app/static/', prefix='static/')
+
     return flask_app
