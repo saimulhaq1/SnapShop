@@ -66,7 +66,7 @@ def auth_action(mode):
                 name=username,
                 email=email,
                 password=generate_password_hash(password),
-                role='customer',
+                role='CUSTOMER',
                 # ⚠️ INACTIVE until email is verified
                 status=CommonStatus.INACTIVE,
                 permissions='{}'

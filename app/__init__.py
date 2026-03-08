@@ -1,3 +1,4 @@
+import os
 import json
 from flask import Flask, session, redirect, url_for, request
 from app.extensions import db, migrate 
@@ -7,21 +8,17 @@ def create_app():
     flask_app = Flask(__name__)
     flask_app.secret_key = "secret-key-123" 
 
-    # Production Config Security
-    flask_app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1']
+    # Debug Mode
+    flask_app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'True').lower() in ['true', '1']
     flask_app.config['TESTING'] = False
     
-    # Database Configuration
-    database_url = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:12345@localhost/ecommerce')
-    
-    # Fix Neon connection string for SQLAlchemy
-    if database_url and database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-        
-    flask_app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    # Database Configuration - Local MySQL
+    flask_app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        'DATABASE_URL', 'mysql+pymysql://root:12345@localhost/ecommerce'
+    )
     flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Connection pool: reuse DB connections instead of creating new ones each request
+    # Connection pool
     flask_app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_size': 10,
         'pool_recycle': 280,
@@ -29,21 +26,13 @@ def create_app():
         'max_overflow': 5,
     }
 
-    # Mail Configuration (Uses environment variables, falls back to placeholders)
+    # Mail Configuration
     flask_app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     flask_app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
     flask_app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() in ['true', '1']
     flask_app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'test@example.com')
     flask_app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'password')
     flask_app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', flask_app.config['MAIL_USERNAME'])
-    
-    # ─── Professional URL & Domain Configuration (Amazon-Style Absolute URLs) ───
-    # If a SERVER_NAME is provided in the .env (e.g. 'snapshoponline.me'), Flask will strictly use it
-    # to generate absolute URLs. We wrap it in a try/except or conditional so local testing still works
-    # if it's omitted.
-    server_name = os.environ.get('SERVER_NAME')
-    if server_name:
-        flask_app.config['SERVER_NAME'] = server_name
         
     # Initialize extensions
     db.init_app(flask_app)
@@ -93,7 +82,7 @@ def create_app():
         if request.endpoint in public_endpoints:
             return
 
-        # 2. Redirect unauthenticated users to login (UPDATED ENDPOINT)
+        # 2. Redirect unauthenticated users to login
         if not session.get('user_id'):
             return redirect(url_for('login.login'))
 
@@ -102,21 +91,14 @@ def create_app():
         user_role = session.get('role')
 
         if user_id and user_role == 'ADMIN':
-            # We query the DB to get the latest permission string
             user = Customer.query.get(user_id)
             if user and user.permissions:
                 try:
-                    # Parse the JSON string from DB
                     new_perms = json.loads(user.permissions)
-                    
-                    # Handle double-encoded JSON if necessary
                     if isinstance(new_perms, str): 
                         new_perms = json.loads(new_perms)
-                    
-                    # Store as a dictionary in the session for fast access
                     session['session_user_permissions'] = new_perms
                 except Exception:
-                    # Fallback to empty dict on parse error
                     session['session_user_permissions'] = {}
 
     # This makes 'session_user_permissions' available globally in all HTML templates
@@ -128,7 +110,6 @@ def create_app():
     with flask_app.app_context():
         import app.models 
 
-        # --- IMPORT CONTROLLERS ---
         # --- IMPORT CONTROLLERS ---
         from app.controllers.register_forget import auth_bp
         from app.controllers.login import login_bp
@@ -153,7 +134,7 @@ def create_app():
         from app.controllers.manage_voucher import voucher_admin_bp
         from app.controllers.manage_banner import banner_bp
 
-        # --- REGISTER BLUEPRINTS WITH EXPLICIT NAMES ---
+        # --- REGISTER BLUEPRINTS ---
         flask_app.register_blueprint(auth_bp, name='register_forget')
         flask_app.register_blueprint(login_bp, name='login')
         flask_app.register_blueprint(staff_bp, name='admin_staff')
@@ -180,9 +161,5 @@ def create_app():
         # --- REGISTER CLI COMMANDS ---
         from app.utils.cron_jobs import register_commands
         register_commands(flask_app)
-
-    # Wrap the built-in WSGI app with WhiteNoise for serving static files in production
-    from whitenoise import WhiteNoise
-    flask_app.wsgi_app = WhiteNoise(flask_app.wsgi_app, root='app/static/', prefix='static/')
 
     return flask_app

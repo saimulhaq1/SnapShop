@@ -10,6 +10,3 @@ __pycache__/
 # ML/DL Data
 .ipynb_checkpoints
 *.log
-
-# Static files
-/app/static/

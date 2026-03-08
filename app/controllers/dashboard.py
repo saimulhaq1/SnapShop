@@ -37,7 +37,7 @@ def dashboard():
     # Customer Count (Dash Widget)
     total_customers = 0
     if not perms.get('dash_customers'):
-        total_customers = Customer.query.filter_by(role='customer').count()
+        total_customers = Customer.query.filter_by(role='CUSTOMER').count()
     
     # Product Count (Dash Widget)
     total_products = 0

@@ -17,7 +17,7 @@ def customers():
     status_filter = request.args.get('status', '')
     direction = request.args.get('direction', 'asc') 
 
-    query = Customer.query.filter(Customer.role == 'customer').options(
+    query = Customer.query.filter(Customer.role == 'CUSTOMER').options(
         joinedload(Customer.addresses).joinedload(Address.zip_code).joinedload(ZipCode.city),
         joinedload(Customer.orders).joinedload(SalesOrder.payments).joinedload(Payment.method)
     )
@@ -72,7 +72,7 @@ def customer_detail(customer_id):
     customer = Customer.query.options(
         joinedload(Customer.orders).joinedload(SalesOrder.payments).joinedload(Payment.method),
         joinedload(Customer.addresses).joinedload(Address.zip_code)
-    ).filter_by(customer_id=customer_id, role='customer').first_or_404()
+    ).filter_by(customer_id=customer_id, role='CUSTOMER').first_or_404()
 
     # Calculate Total Paid directly from the DB field logic
     total_paid = 0.0
