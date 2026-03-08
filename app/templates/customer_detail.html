@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block page_title %}Customer Details: {{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">
+            <span class="text-muted fw-light">Customers /</span> Details
+        </h4>
+        <a href="{{ url_for('customer.customers') }}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-back me-1"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4 col-lg-5 col-md-5">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="user-avatar-section mb-4">
+                        <div class="d-flex align-items-center flex-column">
+                            <img class="img-fluid rounded my-4"
+                                src="{{ url_for('static', filename='assets/img/avatars/1.png') }}" height="110"
+                                width="110" alt="User avatar" />
+                            <div class="user-info text-center">
+                                <h4 class="mb-2">{{ customer.name }}</h4>
+                                <span
+                                    class="badge {% if customer.status.name == 'ACTIVE' %}bg-label-success{% else %}bg-label-danger{% endif %}">
+                                    {{ customer.status.name.title() }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="pb-2 border-bottom mb-4">General Information</h5>
+                    <div class="info-container">
+                        <ul class="list-unstyled">
+                            <li class="mb-3"><span class="fw-bold me-2">Email:</span> <span>{{ customer.email }}</span>
+                            </li>
+                            <li class="mb-3"><span class="fw-bold me-2">Mobile:</span> <span>{{ customer.mobile_no or
+                                    '-' }}</span></li>
+                            <li class="mb-3">
+                                <span class="fw-bold me-2">Joined:</span>
+                                <span>{{ customer.join_date.strftime('%b %d, %Y') if customer.join_date else 'N/A'
+                                    }}</span>
+                            </li>
+                            <li class="mb-3 border-top pt-2">
+                                <span class="fw-bold me-2"><i class="bx bx-trending-up text-success"></i> Lifetime Value
+                                    (LTV):</span>
+                                <span class="text-success fw-bold fs-5">Rs. {{ "%.2f"|format(customer.total_spent|float)
+                                    }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8 col-lg-7 col-md-7">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4 shadow-none border">
+                        <div class="card-header border-bottom bg-lighter">
+                            <h5 class="mb-0 small fw-bold text-uppercase"><i class="bx bx-map me-1"></i> Stored
+                                Locations</h5>
+                        </div>
+                        <div class="card-body pt-3">
+                            {% for addr in customer.addresses %}
+                            <div class="mb-3 p-2 bg-light rounded border">
+                                <span class="badge bg-primary mb-2">{{ addr.address_title|default('General') }}</span>
+                                <p class="mb-0 small fw-bold text-dark">{{ addr.address }}</p>
+                                <small class="text-muted">{{ addr.zip_code.city.city_name if addr.zip_code else ''
+                                    }}</small>
+                            </div>
+                            {% else %}
+                            <p class="text-muted small py-2">No addresses stored.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-4 shadow-none border">
+                        <div class="card-header border-bottom bg-lighter">
+                            <h5 class="mb-0 small fw-bold text-uppercase"><i class="bx bx-credit-card me-1"></i> Payment
+                                Activity</h5>
+                        </div>
+                        <div class="card-body pt-3">
+                            <ul class="list-group list-group-flush">
+                                {% set payment_found = false %}
+                                {% for order in customer.orders %}
+                                {% for pay in order.payments %}
+                                {% set payment_found = true %}
+                                <li
+                                    class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom-0">
+                                    <span class="small"><i class="bx bx-check-circle text-success me-1"></i> {{
+                                        pay.method.pay_method_name }}</span>
+                                    <span class="badge bg-label-secondary small" style="font-size: 0.7rem;">{{
+                                        pay.payment_date.strftime('%Y-%m-%d') }}</span>
+                                </li>
+                                {% endfor %}
+                                {% endfor %}
+
+                                {% if not payment_found %}
+                                <p class="text-muted small py-2">No payment history found.</p>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="mb-4">Order History</h4>
+
+            {% for o in customer.orders %}
+            {# Controller now provides o.paid_total and o.pending_total #}
+
+            <div class="card mb-4 border-start border-primary border-3 shadow-none border-top border-end border-bottom">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <div>
+                        <span class="fw-bold text-dark">Order #{{ o.order_id }}</span>
+                        <span class="text-muted small ms-2">
+                            <i class="bx bx-calendar-alt me-1"></i>
+                            {{ o.order_date.strftime('%Y-%m-%d') if o.order_date else 'N/A' }}
+                        </span>
+                        <span
+                            class="badge ms-2 {% if o.status.name == 'DELIVERED' %}bg-label-success{% else %}bg-label-primary{% endif %}">
+                            {{ o.status.name }}
+                        </span>
+                    </div>
+                    <a href="{{ url_for('order.order_detail', id=o.order_id) }}" class="btn btn-sm btn-primary">View
+                        Details</a>
+                </div>
+
+                <div class="card-body pt-3">
+                    <div class="row mb-3">
+                        <div class="col-sm-6 text-sm-end ms-auto">
+                            <p class="small mb-1 text-muted">Order Total:</p>
+                            <h5 class="{% if o.is_revenue_tracked %}text-success{% else %}text-primary{% endif %} mb-0">
+                                Rs. {{ "%.2f"|format(o.total_amount|float) }}
+                                {% if o.is_revenue_tracked %}
+                                <i class="bx bx-check-circle" title="Tracked in Revenue LTV"></i>
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 small fw-bold text-uppercase text-muted">Items Summary</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless">
+                            <thead>
+                                <tr class="text-muted" style="font-size: 0.8rem;">
+                                    <th>Product Name</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Price Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in o.order_items %}
+                                <tr class="align-middle">
+                                    <td class="small">{{ item.product.name if item.product else 'Deleted Product' }}
+                                    </td>
+                                    <td class="text-center small">{{ item.quantity }}</td>
+                                    <td class="text-end small">Rs. {{ "%.2f"|format(item.unit_price|float) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div
+                        class="mt-3 p-3 rounded {% if o.pending_total > 0 %}bg-label-danger{% else %}bg-label-success{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="small fw-bold mb-1">Total Paid:</h6>
+                                <h5 class="mb-0">Rs. {{ "%.2f"|format(o.paid_total) }}</h5>
+                            </div>
+                            <div class="text-end">
+                                {% if o.pending_total > 0 %}
+                                <span class="badge bg-danger">Pending Payment</span>
+                                <div class="small text-danger mt-1">
+                                    Due: Rs. {{ "%.2f"|format(o.pending_total) }}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-success">Payment Confirmed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-dashed">
+                <div class="card-body text-center py-5">
+                    <i class="bx bx-cart-alt fs-1 text-muted mb-3"></i>
+                    <h5>No Orders Found</h5>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

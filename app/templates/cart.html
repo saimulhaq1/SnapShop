@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block page_title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bx bx-cart me-2"></i>Your Shopping Cart</h4>
+        <a href="{{ url_for('product.products') }}" class="btn btn-outline-primary shadow-sm">
+            <i class="bx bx-arrow-back me-1"></i> Add More Products
+        </a>
+    </div>
+
+    {% if not cart_items %}
+    <div class="card shadow-none border text-center py-5">
+        <div class="card-body">
+            <i class="bx bx-cart-alt display-1 text-muted mb-3"></i>
+            <h5>Your cart is empty!</h5>
+            <p class="text-muted">Looks like you haven't added anything to your cart yet.</p>
+            <a href="{{ url_for('product.products') }}" class="btn btn-primary px-4">Start Shopping</a>
+        </div>
+    </div>
+    {% else %}
+
+    {# 1. INITIALIZE CALCULATION NAMESPACE #}
+    {% set ns = namespace(subtotal=0, total_tax=0) %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-none border mb-4">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product Details</th>
+                                <th class="text-center" style="width: 180px;">Quantity</th>
+                                <th class="text-end">Total (Incl. Tax)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            {# 2. LIVE CALCULATION PER ITEM #}
+                            {% set qty = item.qty|int %}
+                            {% set sale_price = (item.product.sale_price or 0)|float %}
+
+                            {% set p_disc = (item.product.discount or 0)|float %}
+                            {% set c_disc = 0.0 %}
+                            {% if item.product.category and item.product.category.discount %}
+                            {% set c_disc = item.product.category.discount|float %}
+                            {% endif %}
+
+                            {% set total_disc = p_disc + c_disc %}
+
+                            {# Calculate Price After Discount #}
+                            {% set discounted_unit_price = sale_price * (1.0 - (total_disc / 100.0)) %}
+
+                            {# Calculate Tax #}
+                            {% set tax_rate = 0.0 %}
+                            {% if item.product.tax_rule %}
+                            {% set tax_rate = item.product.tax_rule.rate|float %}
+                            {% endif %}
+
+                            {% set item_base_total = discounted_unit_price * qty %}
+                            {% set item_tax_total = item_base_total * (tax_rate / 100.0) %}
+                            {% set item_final_total = item_base_total + item_tax_total %}
+
+                            {# 3. ACCUMULATE TOTALS FOR SUMMARY BOX #}
+                            {% set ns.subtotal = ns.subtotal + item_base_total %}
+                            {% set ns.total_tax = ns.total_tax + item_tax_total %}
+
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-md me-3">
+                                            {% if item.product.image_url %}
+                                            <img src="{{ url_for('static', filename='assets/img/products/' + item.product.image_url) }}"
+                                                alt="Product" class="rounded" width="50">
+                                            {% else %}
+                                            <span class="avatar-initial rounded bg-label-secondary"><i
+                                                    class="bx bx-package"></i></span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">
+                                                <a href="{{ url_for('product.product_detail', id=item.product.pro_id) }}"
+                                                    class="text-body">{{ item.product.name }}</a>
+                                            </h6>
+                                            <small class="text-muted">{{ item.product.category.cat_name if
+                                                item.product.category else 'General' }}</small>
+                                            {% if total_disc > 0 %}
+                                            <div class="badge bg-label-success discount-badge"
+                                                style="font-size: 0.6rem;">-{{ total_disc }}% Off</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {# UPDATED: Added onchange event for auto-update #}
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <input type="number" name="quantity" value="{{ item.qty }}" min="1"
+                                            max="{{ item.product.stock }}"
+                                            onchange="updateQuantity({{ item.product.pro_id }}, this)"
+                                            class="form-control form-control-sm text-center" style="width: 80px;">
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-dark">Rs. {{ "{:,.2f}".format(item_final_total) }}</span>
+                                    <div class="mt-1">
+                                        <a href="{{ url_for('cart.remove_from_cart', product_id=item.product.pro_id) }}"
+                                            class="btn btn-sm text-danger p-0" style="font-size: 0.75rem;">
+                                            <i class="bx bx-trash me-1"></i>Remove
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-none border sticky-top" style="top: 20px;">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small">Subtotal (After Disc.):</span>
+                        <span class="fw-bold text-dark">Rs. {{ "{:,.2f}".format(ns.subtotal) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small">Estimated GST:</span>
+                        <span class="text-danger fw-bold">+ Rs. {{ "{:,.2f}".format(ns.total_tax) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small"><i class="bx bx-truck me-1"></i>Delivery:</span>
+                        {% if delivery_charge and delivery_charge > 0 %}
+                        <span class="fw-bold text-warning">+ Rs. {{ "{:,.2f}".format(delivery_charge) }}</span>
+                        {% else %}
+                        <span class="fw-bold text-success">FREE</span>
+                        {% endif %}
+                    </div>
+                    <hr>
+
+                    {# VOUCHER SECTION #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-uppercase small text-muted">Have a Promo Code?</label>
+                        {% if voucher %}
+                        <div
+                            class="alert alert-success d-flex justify-content-between align-items-center p-2 mb-2 shadow-sm border-0">
+                            <div>
+                                <i class="bx bxs-discount me-1"></i>
+                                <span class="fw-bold">{{ voucher.code }}</span>
+                                <div class="small">Applied Successfully!</div>
+                            </div>
+                            <form action="{{ url_for('cart.remove_voucher') }}" method="POST" class="m-0">
+                                <button type="submit" class="btn btn-sm btn-icon btn-outline-danger"
+                                    title="Remove Voucher">
+                                    <i class="bx bx-x"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        {% if voucher_discount and voucher_discount > 0 %}
+                        <div class="d-flex justify-content-between mb-3 text-success">
+                            <span class="small fw-bold"><i class="bx bxs-discount me-1"></i>Discount:</span>
+                            <span class="fw-bold">- Rs. {{ "{:,.2f}".format(voucher_discount) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% else %}
+                        <form action="{{ url_for('cart.apply_voucher') }}" method="POST" class="d-flex gap-2 mb-3">
+                            <input type="text" name="voucher_code" class="form-control text-uppercase"
+                                placeholder="Enter code">
+                            <button type="submit" class="btn btn-primary">Apply</button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <h5 class="fw-bold">Grand Total:</h5>
+                        <h4 class="fw-bold text-primary">
+                            {% set grand_total = ns.subtotal + ns.total_tax + (delivery_charge or 0) - (voucher_discount
+                            or 0) %}
+                            {% if grand_total < 0 %}{% set grand_total=0 %}{% endif %} Rs. {{ "{:,.2f}"
+                                .format(grand_total) }} </h4>
+                    </div>
+
+                    <a href="{{ url_for('cart.checkout') }}" class="btn btn-success btn-lg w-100 py-3 shadow-sm">
+                        Order Now <i class="bx bx-right-arrow-alt ms-1"></i>
+                    </a>
+
+                    <div class="mt-3 text-center">
+                        <small class="text-muted"><i class="bx bx-shield-quarter me-1"></i> Secure Transaction</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{# NEW LOGIC: JavaScript for Auto-Update #}
+<script>
+    window.CartApiConfig = {
+        updateQtyUrl: "{{ url_for('cart.update_qty') }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='js/cart_actions.js') }}"></script>
+{% endblock %}

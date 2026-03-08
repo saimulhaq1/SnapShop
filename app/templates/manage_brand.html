@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block page_title %}Manage Brands{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Inventory /</span> Brands</h4>
+
+    <!-- Add Brand Form -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Create New Brand</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('manage_brand.add_brand') }}" method="POST">
+                <div class="input-group">
+                    <input type="text" name="brand_name" class="form-control" placeholder="Enter Brand Name" required>
+                    <button class="btn btn-primary" type="submit">Add Brand</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Brands Table -->
+    <div class="card">
+        <h5 class="card-header">Existing Brands</h5>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Brand Name</th>
+                        <th>Products Count</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for brand in brands %}
+                    <tr>
+                        <td><strong>#{{ brand.brand_id }}</strong></td>
+                        <td>{{ brand.brand_name }}</td>
+                        <td><span class="badge bg-label-info">{{ brand.products|length }}</span></td>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                    data-bs-toggle="dropdown">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <!-- Edit Trigger -->
+                                    <button type="button" class="dropdown-item"
+                                        onclick="openEditModal('{{ brand.brand_id }}', '{{ brand.brand_name }}')">
+                                        <i class="bx bx-edit-alt me-1"></i> Edit
+                                    </button>
+
+                                    <!-- Delete Form -->
+                                    {% if brand.products|length == 0 %}
+                                    <form action="{{ url_for('manage_brand.delete_brand', id=brand.brand_id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Are you sure you want to delete {{ brand.brand_name }}?');"
+                                        style="display:inline;">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bx bx-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="dropdown-item text-muted" title="Cannot delete brand with products">
+                                        <i class="bx bx-block me-1"></i> Delete (In Use)
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">No brands found. Add one above!</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editBrandModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Brand</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editBrandForm" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label for="edit_brand_name" class="form-label">Brand Name</label>
+                            <input type="text" id="edit_brand_name" name="brand_name" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.ManageBrandConfig = {
+        editUrlTemplate: "{{ url_for('manage_brand.edit_brand', id=0) }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='js/manage_brand_actions.js') }}"></script>
+{% endblock %}

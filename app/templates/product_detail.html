@@ -1,0 +1,604 @@
+{% extends "base.html" %}
+{% block page_title %}{{ product.name }}{% endblock %}
+
+{# ========================================================= #}
+{# REVIEWS & RATINGS SECTION (outside main content block) #}
+{# Actually, we render this inside the content block below #}
+{# ========================================================= #}
+
+{% block reviews_section %}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('product.products') }}">Products</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-none border">
+        <div class="card-body">
+            <div class="row g-5">
+                <div class="col-md-6">
+                    <style>
+                        .zoom-container {
+                            overflow: hidden;
+                            position: relative;
+                        }
+
+                        .zoom-image {
+                            transition: transform 0.4s ease, opacity 0.3s;
+                        }
+
+                        .zoom-container:hover .zoom-image {
+                            transform: scale(1.6);
+                            cursor: zoom-in;
+                        }
+                    </style>
+                    <div class="p-3 border rounded bg-lighter mb-4 text-center zoom-container">
+                        <img id="mainProductImage"
+                            src="{{ url_for('static', filename='assets/img/products/' + (product.image_url or 'default_product.png')) }}"
+                            alt="{{ product.name }}" class="img-fluid rounded shadow-sm zoom-image"
+                            style="max-height: 400px; object-fit: contain;">
+                    </div>
+
+                    {# --- START IMAGE GALLERY --- #}
+                    {% if product.additional_images %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold small text-muted text-uppercase mb-2">Image Gallery</h6>
+                        <div class="d-flex overflow-auto gap-2 pb-2"
+                            style="scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+                            {# Include the main image in the gallery as the first thumbnail #}
+                            <div class="border rounded p-1 cursor-pointer bg-white flex-shrink-0"
+                                style="width: 80px; height: 80px; cursor: pointer;"
+                                onclick="document.getElementById('mainProductImage').src = this.querySelector('img').src;">
+                                <img src="{{ url_for('static', filename='assets/img/products/' + (product.image_url or 'default_product.png')) }}"
+                                    class="w-100 h-100" style="object-fit: cover; border-radius: 4px;">
+                            </div>
+
+                            {# Loop through additional images #}
+                            {% for img in product.additional_images %}
+                            <div class="border rounded p-1 cursor-pointer bg-white flex-shrink-0"
+                                style="width: 80px; height: 80px; cursor: pointer;"
+                                onclick="document.getElementById('mainProductImage').src = this.querySelector('img').src;">
+                                <img src="{{ url_for('static', filename='assets/img/products/gallery/' + img.image_url) }}"
+                                    class="w-100 h-100" style="object-fit: cover; border-radius: 4px;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {# --- END IMAGE GALLERY --- #}
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="card shadow-none border h-100 text-center p-2 bg-light">
+                                <div class="avatar avatar-sm bg-label-primary mx-auto mb-1">
+                                    <i class="bx bx-refresh fs-4"></i>
+                                </div>
+                                <small class="fw-bold d-block text-dark" style="font-size: 0.65rem;">7 Days
+                                    Return</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card shadow-none border h-100 text-center p-2 bg-light">
+                                <div class="avatar avatar-sm bg-label-success mx-auto mb-1">
+                                    <i class="bx bx-shield-alt-2 fs-4"></i>
+                                </div>
+                                <small class="fw-bold d-block text-dark" style="font-size: 0.65rem;">Secure Pay</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card shadow-none border h-100 text-center p-2 bg-light">
+                                <div class="avatar avatar-sm bg-label-info mx-auto mb-1">
+                                    <i class="bx bx-check-shield fs-4"></i>
+                                </div>
+                                <small class="fw-bold d-block text-dark" style="font-size: 0.65rem;">100%
+                                    Genuine</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-none border bg-lighter">
+                        <div class="card-body p-3">
+                            <h6 class="fw-bold mb-3 small text-uppercase text-muted border-bottom pb-2 text-start">
+                                Product Specifications</h6>
+                            <div class="row mb-2">
+                                <div class="col-5 text-muted small text-start">Category:</div>
+                                <div class="col-7 small fw-bold text-start text-dark">{{ product.category.cat_name if
+                                    product.category else 'General' }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-5 text-muted small text-start">Availability:</div>
+                                <div class="col-7 small fw-bold text-success text-start">Immediate Shipping</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-5 text-muted small text-start">Condition:</div>
+                                <div class="col-7 small fw-bold text-start text-dark">New / Sealed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-2">
+                        <h2 class="fw-bold mb-1" style="font-size: 2rem;">{{ product.name }}</h2>
+                        {% if product.category %}
+                        <div class="mb-2 d-flex align-items-center">
+                            <i class="bx bx-folder me-2 text-muted"></i>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    {% if product.category.parent_node %}
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ url_for('product.products', category_id=product.category.parent_node.cat_id) }}"
+                                            class="text-muted text-decoration-none fw-semibold hover-primary">
+                                            {{ product.category.parent_node.cat_name }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    <li class="breadcrumb-item active" aria-current="page">
+                                        <a href="{{ url_for('product.products', category_id=product.category.cat_id) }}"
+                                            class="text-primary text-decoration-none fw-bold hover-primary">
+                                            {{ product.category.cat_name }}
+                                        </a>
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
+                        {% endif %}
+
+                        {% if product.brand %}
+                        <div class="mb-2">
+                            <span class="text-muted small">Brand: </span>
+                            <a href="{{ url_for('product.products', brand_id=product.brand_id) }}"
+                                class="text-info text-decoration-none fw-semibold hover-primary">
+                                {{ product.brand.brand_name }}
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-4">
+                        {% set total_discount = product.get_total_discount_percentage() %}
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                {% if total_discount > 0 %}
+                                <span class="text-muted text-decoration-line-through me-2"
+                                    style="font-size: 1.1rem;">Rs. {{
+                                    "%.2f"|format(product.get_price_plus_tax()) }}</span>
+                                {% endif %}
+                                <h3 class="text-primary fw-bold mb-0" style="font-size: 1.5rem;">Rs. {{
+                                    "%.2f"|format(product.get_final_price_plus_tax()) }}</h3>
+                            </div>
+
+                            <span class="badge bg-label-dark border p-1" style="font-size: 0.8rem;">
+                                <i class="bx bx-barcode-reader me-1"></i> ART: {{ product.product_code }}
+                            </span>
+                        </div>
+                        <small class="text-muted">Inclusive of all taxes (GST {{ product.tax_rule.rate if
+                            product.tax_rule else 0 }}%)</small>
+
+                        {# --- DELIVERY INFO --- #}
+                        <div class="mt-2">
+                            {% if product.is_free_delivery %}
+                            <span class="badge bg-success p-2" style="font-size: 0.8rem;">
+                                <i class="bx bx-check-circle me-1"></i> FREE Delivery
+                            </span>
+                            {% else %}
+                            <div class="d-flex align-items-center mt-1 text-muted small">
+                                <i class="bx bx-truck me-1 text-primary"></i>
+                                <span>Standard Delivery: <strong class="text-dark">Rs. {{
+                                        "%.0f"|format(product.delivery_charge or 0) }}</strong></span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Description:</h6>
+                        <p class="text-muted" style="line-height: 1.6;">
+                            {{ product.description or 'No description provided for this product.' }}
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center bg-light p-3 rounded border border-dashed">
+                            {% if product.stock > 0 %}
+                            <div class="badge bg-label-success p-2 me-3"><i class="bx bx-check-circle fs-4"></i></div>
+                            <div>
+                                <span class="d-block fw-bold text-success">Product In Stock</span>
+                                <small class="text-muted">{{ product.stock }} units available in warehouse</small>
+                            </div>
+                            {% else %}
+                            <div class="badge bg-label-danger p-2 me-3"><i class="bx bx-x-circle fs-4"></i></div>
+                            <div>
+                                <span class="d-block fw-bold text-danger">Out of Stock</span>
+                                <small class="text-muted">Currently unavailable</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('cart.add_to_cart', product_id=product.pro_id) }}"
+                            class="btn btn-primary btn-lg shadow-sm {% if product.stock <= 0 %}disabled{% endif %}">
+                            <i class="bx bx-cart-add me-2"></i> Add to Shopping Cart
+                        </a>
+                        <a href="{{ url_for('product.products') }}" class="btn btn-outline-secondary">
+                            <i class="bx bx-arrow-back me-1"></i> Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- PILLAR 6: SMART RECOMMENDATIONS --- #}
+    {% if recommendations %}
+    <div class="mt-5 mb-4">
+        <h4 class="fw-bold mb-3 border-bottom pb-2"><i class="bx bx-purchase-tag-alt text-primary me-2"></i> Customers
+            Also Viewed</h4>
+        <div class="row">
+            {% for rec in recommendations %}
+            <div class="col-6 col-md-3 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-shadow text-center p-2">
+                    <a href="{{ url_for('product.product_detail', id=rec.pro_id) }}"
+                        class="text-decoration-none text-dark">
+                        <img src="{{ url_for('static', filename='assets/img/products/' + (rec.image_url or 'default_product.png')) }}"
+                            class="img-fluid rounded mb-2" style="height: 150px; object-fit: contain;"
+                            alt="{{ rec.name }}">
+                        <h6 class="mb-1 fw-semibold text-truncate" style="font-size: 0.9rem;">{{ rec.name }}</h6>
+                        <span class="text-primary fw-bold" style="font-size: 0.85rem;">Rs. {{
+                            "{:,.2f}".format(rec.sale_price) }}</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{# ================================================================ #}
+{# REVIEWS & RATINGS SECTION #}
+{# ================================================================ #}
+<div class="container-xxl mt-4 pb-5">
+
+    <style>
+        .review-reply {
+            border-left: 3px solid #007BFF;
+            background-color: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+
+    <div class="row" id="reviews">
+        {# ══════════════════════════════════════════ #}
+        {# LEFT (65%): REVIEWS LIST + SUMMARY #}
+        {# ══════════════════════════════════════════ #}
+        <div class="col-lg-8 mb-4">
+
+            {# ── AMAZON STYLE RATING SUMMARY ── #}
+            <div class="rating-summary-card mb-4">
+                <div class="rating-big">
+                    <div class="rating-number">{% if avg_rating %}{{ avg_rating }}{% else %}—{% endif %}</div>
+                    <div class="rating-stars">
+                        {% for i in range(1,6) %}
+                        {% if avg_rating and i <= avg_rating|int %}<i class="bx bxs-star"></i>
+                            {% elif avg_rating and i == avg_rating|int + 1 and (avg_rating - avg_rating|int) >= 0.5 %}<i
+                                class="bx bxs-star-half"></i>
+                            {% else %}<i class="bx bx-star"></i>{% endif %}
+                            {% endfor %}
+                    </div>
+                    <div class="rating-count">{{ review_count }} review{{ 's' if review_count != 1 else '' }}</div>
+                </div>
+                <div class="rating-bars">
+                    {% for star in [5,4,3,2,1] %}
+                    {% set count = star_distribution.get(star, 0) %}
+                    {% set pct = ((count / review_count * 100)|int) if review_count > 0 else 0 %}
+                    <div class="bar-row">
+                        <span class="bar-label">{{ star }} <i class="bx bxs-star"></i></span>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:{{ pct }}%"></div>
+                        </div>
+                        <span class="bar-count">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3"><i class="bx bx-chat me-2 text-primary"></i>Customer Reviews</h5>
+
+            {% if not reviews %}
+            <div class="card shadow-none border text-center py-4">
+                <div class="card-body">
+                    <i class="bx bx-comment-x display-4 text-muted mb-2"></i>
+                    <p class="text-muted">No reviews yet. Be the first to share your thoughts!</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Macro to render a single review card #}
+            {% macro render_review(rev, is_reply=False) %}
+            <div class="{% if is_reply %}official-reply-card{% else %}review-card{% endif %} mb-3">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div
+                                class="avatar avatar-sm {% if rev.author and rev.author.role.name in ['ADMIN', 'STAFF'] %}bg-label-secondary{% else %}bg-label-primary{% endif %}">
+                                <span class="avatar-initial rounded-circle">{{ rev.author.name[0].upper() if rev.author
+                                    else '?' }}</span>
+                            </div>
+                            <div>
+                                <strong class="d-block" style="font-size:0.9rem;">{{ rev.author.name if rev.author else
+                                    'Anonymous' }}</strong>
+                                <small class="text-muted">{{ rev.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+                            </div>
+
+                            {# Verified Purchase Badge #}
+                            {% if rev.verified_purchase %}
+                            <span class="badge-verified ms-2">
+                                <i class="bx bx-check-shield me-1"></i>Verified Purchase
+                            </span>
+                            {% endif %}
+
+                            {# Admin badge #}
+                            {% if rev.author and rev.author.role.name in ['ADMIN', 'STAFF'] %}
+                            <span class="badge-official ms-1">
+                                <i class="bx bx-badge-check me-1"></i>Official Response
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {# Star rating (top-level only) #}
+                    {% if rev.rating %}
+                    <div class="d-flex gap-1" style="font-size:0.9rem;">
+                        {% for i in range(1,6) %}
+                        <i
+                            class="bx {% if i <= rev.rating %}bxs-star text-warning{% else %}bx-star text-muted{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <p class="mb-2 small mt-2">{{ rev.comment }}</p>
+
+                    {# Render Photos if they exist #}
+                    {% if rev.photos and rev.photos|length > 0 %}
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        {% for photo in rev.photos %}
+                        <img src="{{ url_for('static', filename=photo.photo_url) }}" alt="Review Photo"
+                            class="img-thumbnail" style="width:80px; height:80px; object-fit:cover; cursor:pointer;"
+                            data-bs-toggle="modal" data-bs-target="#photoModal-{{ photo.photo_id }}">
+                        <div class="modal fade" id="photoModal-{{ photo.photo_id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content bg-transparent border-0 shadow-none">
+                                    <div class="modal-header border-0 pb-0">
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center p-0">
+                                        <img src="{{ url_for('static', filename=photo.photo_url) }}"
+                                            class="img-fluid rounded shadow" alt="Review Full Photo"
+                                            style="max-height:80vh;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# Like / Dislike buttons #}
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        {% set user_vote = user_votes.get(rev.review_id) %}
+                        <form method="POST" action="{{ url_for('reviews.vote_review', review_id=rev.review_id) }}"
+                            class="d-inline">
+                            <input type="hidden" name="vote_type" value="like">
+                            <button type="submit"
+                                class="btn btn-sm {% if user_vote == 'like' %}btn-success{% else %}btn-outline-success{% endif %} py-0 px-2">
+                                <i class="bx bx-like me-1"></i>{{ rev.like_count() }}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reviews.vote_review', review_id=rev.review_id) }}"
+                            class="d-inline">
+                            <input type="hidden" name="vote_type" value="dislike">
+                            <button type="submit"
+                                class="btn btn-sm {% if user_vote == 'dislike' %}btn-danger{% else %}btn-outline-danger{% endif %} py-0 px-2">
+                                <i class="bx bx-dislike me-1"></i>{{ rev.dislike_count() }}
+                            </button>
+                        </form>
+
+                        {# Reply toggle (only top-level) #}
+                        {% if not is_reply %}
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                            onclick="document.getElementById('reply-form-{{ rev.review_id }}').classList.toggle('d-none')">
+                            <i class="bx bx-reply me-1"></i>Reply
+                        </button>
+                        {% endif %}
+
+                        {# Admin / Author delete #}
+                        {% if session.get('role') == 'ADMIN' or session.get('user_id') == rev.customer_id %}
+                        <form method="POST" action="{{ url_for('reviews.delete_review', review_id=rev.review_id) }}"
+                            class="d-inline" onsubmit="return confirm('Delete this review?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    {# Inline Reply Form #}
+                    {% if not is_reply %}
+                    <div id="reply-form-{{ rev.review_id }}" class="d-none mt-3">
+                        <form method="POST" action="{{ url_for('reviews.add_review') }}">
+                            <input type="hidden" name="product_id" value="{{ product.pro_id }}">
+                            <input type="hidden" name="parent_id" value="{{ rev.review_id }}">
+                            <div class="input-group">
+                                <input type="text" name="comment" class="form-control form-control-sm"
+                                    placeholder="Write your reply..." required>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bx bx-send me-1"></i>Send
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {# ─── Nested Replies (rendered INSIDE the parent card) ─── #}
+                    {% if not is_reply and rev.replies %}
+                    <div class="replies-container mt-3">
+                        {% for reply in rev.replies %}
+                        {{ render_review(reply, is_reply=True) }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endmacro %}
+
+            {% for review in reviews %}
+            {{ render_review(review) }}
+            {% endfor %}
+        </div>
+
+        {# -- RIGHT (35%): WRITE A REVIEW FORM -- #}
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top:20px; z-index: 10;">
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold text-white"><i class="bx bx-pencil me-2"></i>Write a Review</h6>
+                </div>
+                <div class="card-body p-3">
+                    {% if session.get('user_id') %}
+                    <form method="POST" action="{{ url_for('product.submit_review', id=product.pro_id) }}"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted text-uppercase"
+                                style="letter-spacing:0.5px;">Your Rating</label>
+                            <div id="star-picker" class="d-flex gap-2" style="font-size:2rem; cursor:pointer;">
+                                {% for i in range(1,6) %}
+                                <i class="bx bx-star text-muted star-btn" data-value="{{ i }}" id="star-{{ i }}"></i>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="rating_input" value="">
+                            <small class="text-muted mt-1 d-block">Click a star to rate</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted text-uppercase"
+                                style="letter-spacing:0.5px;">Your Comment</label>
+                            <textarea name="comment" class="form-control" rows="4"
+                                placeholder="Share your experience with this product..." required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted text-uppercase"
+                                style="letter-spacing:0.5px;">Attach Photos (Max 3)</label>
+                            <input class="form-control form-control-sm" type="file" name="photos" id="photos"
+                                accept="image/png, image/jpeg, image/jpg, image/webp" multiple
+                                onchange="previewPhotos(this)">
+                            <small class="text-muted mt-1 d-block">Only PNG, JPG, WEBP. No videos.</small>
+                            <div id="photo-preview-row"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                            <i class="bx bx-send me-1"></i>Submit Review
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bx bx-lock-alt display-4 text-muted mb-2"></i>
+                        <p class="text-muted small mb-3">Please login to leave a review.</p>
+                        <a href="{{ url_for('login.login') }}" class="btn btn-primary btn-sm px-4">
+                            <i class="bx bx-log-in me-1"></i>Login to Review
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/star_picker.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('form[action*="/reviews/vote/"]');
+        forms.forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const url = form.action;
+                const voteType = form.querySelector('input[name="vote_type"]').value;
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ vote_type: voteType })
+                    });
+
+                    if (response.status === 401) {
+                        const data = await response.json();
+                        window.location.href = data.redirect;
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const wrapper = form.closest('.d-flex.align-items-center.gap-2.flex-wrap');
+
+                        const likeForm = wrapper.querySelector('input[value="like"]').closest('form');
+                        const dislikeForm = wrapper.querySelector('input[value="dislike"]').closest('form');
+
+                        const likeBtn = likeForm.querySelector('button');
+                        const dislikeBtn = dislikeForm.querySelector('button');
+
+                        likeBtn.innerHTML = `<i class="bx bx-like me-1"></i>${data.like_count}`;
+                        dislikeBtn.innerHTML = `<i class="bx bx-dislike me-1"></i>${data.dislike_count}`;
+
+                        likeBtn.className = `btn btn-sm py-0 px-2 ${data.user_vote === 'like' ? 'btn-success' : 'btn-outline-success'}`;
+                        dislikeBtn.className = `btn btn-sm py-0 px-2 ${data.user_vote === 'dislike' ? 'btn-danger' : 'btn-outline-danger'}`;
+                    } else {
+                        alert(data.message || 'Error occurred while voting.');
+                    }
+                } catch (error) {
+                    console.error('Error voting:', error);
+                }
+            });
+        });
+    });
+
+    // ─── Photo Preview Function ──────────────────────────────────
+    function previewPhotos(input) {
+        const row = document.getElementById('photo-preview-row');
+        row.innerHTML = '';
+        const files = Array.from(input.files).slice(0, 3);
+        files.forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                row.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+        if (input.files.length > 3) {
+            input.value = '';
+            row.innerHTML = '';
+            alert('You can only attach up to 3 photos.');
+        }
+    }
+</script>
+{% endblock %}

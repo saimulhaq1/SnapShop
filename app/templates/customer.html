@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block page_title %} Customer Registry (Admin) {% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Customer Management</h4>
+    <span class="badge bg-label-warning"><i class="bx bx-shield-quarter me-1"></i> Admin Access Only</span>
+</div>
+
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+        <form class="row g-3" method="get" action="{{ url_for('customer.customers') }}">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Search By</label>
+                    <select name="search_type" class="form-select">
+                        <option value="" {% if not request.args.get('search_type') %}selected{% endif %}>Select Search
+                            Field</option>
+                        <option value="name" {% if request.args.get('search_type')=='name' %}selected{% endif %}>
+                            Customer Name</option>
+                        {% if not session_user_permissions.get('cust_email') %}
+                        <option value="email" {% if request.args.get('search_type')=='email' %}selected{% endif %}>Email
+                            Address</option>
+                        {% endif %}
+                        {% if not session_user_permissions.get('cust_mobile') %}
+                        <option value="mobile" {% if request.args.get('search_type')=='mobile' %}selected{% endif %}>
+                            Mobile Number</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small fw-bold text-uppercase">Search Value</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Search global registry..."
+                            value="{{ request.args.get('q', '') }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Status Filter</label>
+                    <select name="status" class="form-select">
+                        <option value="" {% if not request.args.get('status') %}selected{% endif %}>All Account Statuses
+                        </option>
+                        {% for s in CommonStatus %}
+                        <option value="{{ s.name }}" {% if request.args.get('status')==s.name %}selected{% endif %}>
+                            {{ s.name.title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small fw-bold text-uppercase">Sort By</label>
+                    <select name="direction" class="form-select">
+                        <option value="asc" {% if request.args.get('direction', 'asc' )=='asc' %}selected{% endif %}>
+                            Oldest Registration First</option>
+                        <option value="desc" {% if request.args.get('direction')=='desc' %}selected{% endif %}>Newest
+                            Registration First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-2 d-flex flex-column justify-content-end gap-2">
+                <button class="btn btn-primary w-100 py-2" type="submit">
+                    <i class="bx bx-search-alt me-1"></i> Search
+                </button>
+                {% if request.args.get('q') or request.args.get('status') %}
+                <a href="{{ url_for('customer.customers') }}" class="btn btn-outline-danger w-100 py-2">
+                    <i class="bx bx-refresh me-1"></i> Reset
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header border-bottom">
+        <h5 class="card-title mb-0">Master Customer Registry</h5>
+    </div>
+    <div class="card-body pt-4">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>User</th>
+                        <th>Mobile/Email</th>
+                        <th>Location (City)</th>
+                        <th>Address Type</th>
+                        <th>Payment Pref</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    {% for entry in customers %}
+                    {% set customer = entry.obj %}
+                    <tr>
+                        <td><span class="fw-bold text-muted">#{{ customer.customer_id }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm me-3">
+                                    <span class="avatar-initial rounded-circle bg-label-primary">{{
+                                        customer.name[:1]|upper }}</span>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark">{{ customer.name }}</span>
+                                    <small class="text-muted">Joined: {{ customer.join_date.strftime('%d %b, %Y') if
+                                        customer.join_date else 'N/A' }}</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column">
+                                {% if not session_user_permissions.get('cust_mobile') %}
+                                <span class="text-dark small"><i class="bx bx-phone me-1"></i>{{ customer.mobile_no if
+                                    customer.mobile_no else 'N/A' }}</span>
+                                {% else %}
+                                <span class="text-muted small italic"><i
+                                        class="bx bx-lock-alt me-1"></i>Protected</span>
+                                {% endif %}
+
+                                {% if not session_user_permissions.get('cust_email') %}
+                                <small class="text-muted">{{ customer.email }}</small>
+                                {% else %}
+                                <small class="text-muted italic">Encrypted</small>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="text-dark fw-medium">{{ entry.city }}</span>
+                        </td>
+
+                        <td>
+                            <span class="badge bg-label-info">{{ entry.address_type }}</span>
+                        </td>
+
+                        <td>
+                            <span class="text-dark fw-medium">{{ entry.payment_pref }}</span>
+                        </td>
+
+                        <td>
+                            {% if session.get('role') == 'ADMIN' %}
+                            <select class="form-select form-select-sm fw-bold
+                                {% if customer.status.name == 'ACTIVE' %}text-success border-success
+                                {% elif customer.status.name == 'BLOCKED' %}text-danger border-danger
+                                {% else %}text-secondary border-secondary{% endif %}" {% if
+                                session_user_permissions.get('cust_status') %}disabled{% endif %}
+                                onchange="updateCustomerStatus('{{ customer.customer_id }}', this.value, this)">
+
+                                {% for s in CommonStatus %}
+                                <option value="{{ s.name }}" {% if customer.status.name==s.name %}selected{% endif %}>
+                                    {{ s.name.title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ url_for('customer.customer_detail', customer_id=customer.customer_id) }}"
+                                    class="btn btn-sm btn-icon btn-outline-primary" title="View Profile">
+                                    <i class="bx bx-show"></i>
+                                </a>
+                                {% if not session_user_permissions.get('cust_action') %}
+                                <button class="btn btn-sm btn-icon btn-outline-danger" title="Restrict Access">
+                                    <i class="bx bx-user-minus"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bx bx-user-x fs-1 d-block mb-2 text-muted"></i>
+                            No shoppers found in the registry.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.CustomerApiConfig = {
+        updateStatusUrl: "{{ url_for('customer.update_status') }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='js/customer_actions.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary py-3">
+                    <h5 class="text-white mb-0">
+                        <i class="bx bx-user-pin me-2"></i>Delivery & Payment Information
+                    </h5>
+                </div>
+
+                <div class="card-body pt-4">
+                    <p class="text-muted mb-4">Please provide your full details to continue with your order.</p>
+
+                    <form action="{{ url_for('complete_profile.save_profile') }}" method="POST" id="profilePaymentForm">
+                        <input type="hidden" name="next_p" value="{{ next_p }}">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase text-primary">Mobile Number</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-phone"></i></span>
+                                <input type="text" name="mobile" class="form-control" placeholder="03XXXXXXXXX"
+                                    value="{{ user.mobile_no or '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase text-primary">Full Street
+                                Address</label>
+                            <textarea name="address" class="form-control" rows="2" placeholder="House #, Street, Area"
+                                required>{{ user.addresses[0].address if user.addresses else '' }}</textarea>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase text-primary">City</label>
+                                <input type="text" name="city" class="form-control" placeholder="City" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase text-primary">State /
+                                    Province</label>
+                                <input type="text" name="state" class="form-control" placeholder="Province" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase text-primary">Zip Code</label>
+                                <input type="text" name="zip_code" class="form-control" placeholder="Zip" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-uppercase text-primary">Country</label>
+                                <select name="country" class="form-select" required>
+                                    <option value="">Select Country</option>
+                                    {% for country in countries %}
+                                    <option value="{{ country.country_id }}">{{ country.country_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase text-primary">Location Label (Home,
+                                Office)</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-tag"></i></span>
+                                <input type="text" name="address_title" class="form-control border-primary"
+                                    placeholder="e.g. Home" list="titleHints" required
+                                    value="{{ user.addresses[0].address_title if user.addresses else '' }}">
+                            </div>
+                            <datalist id="titleHints">
+                                <option value="Home">
+                                <option value="Office">
+                                <option value="Shop">
+                            </datalist>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="text-primary border-bottom pb-2"><i class="bx bx-credit-card me-1"></i> Payment
+                                Preference</h6>
+                            <select name="payment_type" id="payment_type" class="form-select border-primary" required>
+                                <option value="">-- Choose Payment Method --</option>
+                                <option value="Cash">Cash on Delivery</option>
+                                <option value="Card">Debit / Credit Card</option>
+                                <option value="Wallet">Digital Wallet (Easypaisa/JazzCash)</option>
+                            </select>
+                        </div>
+
+                        <div id="card_details_section" style="display:none;" class="p-3 bg-light rounded border mb-3">
+                            <label class="form-label small fw-bold">Card Number</label>
+                            <input type="text" name="card_number" class="form-control mb-2"
+                                placeholder="XXXX XXXX XXXX XXXX">
+                            <div class="row">
+                                <div class="col-6"><input type="text" name="expiry" class="form-control"
+                                        placeholder="MM/YY"></div>
+                                <div class="col-6"><input type="text" name="cvv" class="form-control" placeholder="CVV">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="wallet_details_section" style="display:none;" class="p-3 bg-light rounded border mb-3">
+                            <label class="form-label small fw-bold">Select Wallet</label>
+                            <select name="wallet_provider" class="form-select mb-2">
+                                <option value="Easypaisa">Easypaisa</option>
+                                <option value="JazzCash">JazzCash</option>
+                            </select>
+                            <label class="form-label small fw-bold">Account Number</label>
+                            <input type="text" name="account_no" class="form-control" placeholder="03XXXXXXXXX">
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg py-3">
+                                <i class="bx bx-check-circle me-1"></i> Save Profile & Proceed To Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/complete_profile.js') }}"></script>
+{% endblock %}

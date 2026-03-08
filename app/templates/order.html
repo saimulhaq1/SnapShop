@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block page_title %} Order Management {% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    {# --- VISUAL DEBUG TOOL --- #}
+    {% if order|length > 0 %}
+    <div class="alert alert-info py-2 small mb-3 border-0 shadow-sm">
+        <i class="bx bx-check-circle me-1"></i>
+        <strong>Data Sync:</strong> The template is currently receiving <strong>{{ order|length }}</strong> order(s)
+        from the server.
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+            {% if session.get('role') == 'ADMIN' %}
+            Global Sales Orders
+            {% else %}
+            <span class="text-muted fw-light">Account /</span> My Purchase History
+            {% endif %}
+        </h4>
+        {% if session.get('role') != 'ADMIN' %}
+        <a href="{{ url_for('product.products') }}" class="btn btn-primary shadow-sm">
+            <i class="bx bx-shopping-bag me-1"></i> Continue Shopping
+        </a>
+        {% endif %}
+    </div>
+
+    {# --- NEW PAYMENT METHOD SELECTION (For Customers) --- #}
+    {% if session.get('role') != 'ADMIN' and payment_methods %}
+    <div class="card mb-4 shadow-none border">
+        <div class="card-body">
+            <form method="POST">
+                <h5 class="mb-3">Select Payment Method</h5>
+                <div class="row">
+                    {% for method in payment_methods %}
+                    <div class="col-md-4">
+                        <div class="form-check custom-option custom-option-basic">
+                            <label class="form-check-label custom-option-content" for="payment{{ method.id }}">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                    id="payment{{ method.id }}" value="{{ method.id }}" required>
+                                <span class="custom-option-header">
+                                    <span class="h6 mb-0">{{ method.name }}</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">
+                    <i class="bx bx-check-double me-1"></i> Place Order
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {# --- SEARCH & FILTER SECTION --- #}
+    <div class="card mb-4 shadow-none border">
+        <div class="card-body">
+            {% if session.get('role') == 'ADMIN' %}
+            <form class="row g-3" method="get" action="{{ url_for('order.order_list') }}">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Search By</label>
+                        <select name="search_type" class="form-select">
+                            <option value="" {% if not request.args.get('search_type') %}selected{% endif %}>Select
+                                Search Type</option>
+                            <option value="order_id" {% if request.args.get('search_type')=='order_id' %}selected{%
+                                endif %}>Order ID</option>
+                            <option value="customer" {% if request.args.get('search_type')=='customer' %}selected{%
+                                endif %}>Customer Name</option>
+                            <option value="date" {% if request.args.get('search_type')=='date' %}selected{% endif %}>
+                                Order Date</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Search Value</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-search"></i></span>
+                            <input type="text" name="q" class="form-control" placeholder="Type here..."
+                                value="{{ request.args.get('q', '') }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Status Filter</label>
+                        <select name="status" class="form-select">
+                            <option value="" {% if not request.args.get('status') %}selected{% endif %}>All Statuses
+                            </option>
+                            {% for status in OrderStatus %}
+                            <option value="{{ status.name }}" {% if request.args.get('status')==status.name %}selected{%
+                                endif %}>
+                                {{ status.name.title() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Sort Order</label>
+                        <select name="direction" class="form-select">
+                            <option value="desc" {% if request.args.get('direction', 'desc' )=='desc' %}selected{% endif
+                                %}>Descending (Newest First)</option>
+                            <option value="asc" {% if request.args.get('direction')=='asc' %}selected{% endif %}>
+                                Ascending (Oldest First)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2 d-flex flex-column justify-content-end gap-2">
+                    <button class="btn btn-primary w-100 py-2" type="submit">Search</button>
+                    <a href="{{ url_for('order.order_list') }}" class="btn btn-outline-danger w-100">Reset</a>
+                </div>
+            </form>
+            {% else %}
+            <form method="get" action="{{ url_for('order.order_list') }}" class="row g-2">
+                <div class="col-md-10">
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Search by Order # or Item Name..."
+                            value="{{ request.args.get('q', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {# --- ORDERS TABLE --- #}
+    <div class="card shadow-none border">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 100px;">Order #</th>
+                        {% if session.get('role') == 'ADMIN' %}<th>Customer</th>{% endif %}
+                        <th>Date</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Total Amount</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in order %}
+                    <tr>
+                        <td class="fw-bold">
+                            <a href="{{ url_for('order.order_detail', id=o.id) }}" class="text-primary">
+                                #{{ o.id }}
+                            </a>
+                        </td>
+
+                        {% if session.get('role') == 'ADMIN' %}
+                        <td>
+                            <div class="fw-bold text-dark">{{ o.customer_name }}</div>
+                        </td>
+                        {% endif %}
+
+                        <td class="text-muted">{{ o.date }}</td>
+
+                        <td class="text-center">
+                            <span class="badge bg-label-primary">
+                                {{ o.status.title() if o.status else 'Pending' }}
+                            </span>
+                        </td>
+
+                        <td class="text-end fw-bold text-dark">
+                            <small class="text-muted me-1">Rs.</small>{{ "{:,.2f}".format(o.total) }}
+                        </td>
+
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a class="btn btn-sm btn-icon btn-outline-primary"
+                                    href="{{ url_for('order.order_detail', id=o.id) }}" title="View Order">
+                                    <i class="bx bx-show"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="bx bx-receipt"></i>
+                                </div>
+                                <h5>No Orders Yet</h5>
+                                <p>You haven't placed any orders. Browse our products and find something you love!</p>
+                                <a href="{{ url_for('product.products') }}" class="btn btn-primary px-4">
+                                    <i class="bx bx-shopping-bag me-2"></i>Return to Shop
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

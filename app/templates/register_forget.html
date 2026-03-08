@@ -1,0 +1,90 @@
+{% extends "base_auth.html" %}
+
+{% block content %}
+<div class="card-body p-sm-5 p-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <div
+    class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4 shadow-sm"
+    role="alert">
+    <div class="d-flex">
+      <i class="bx {{ 'bx-check-circle' if category == 'success' else 'bx-error' }} me-2"></i>
+      <div>{{ message|safe }}</div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  {% if mode == 'register' %}
+  <h4 class="mb-1">Adventure starts here 🚀</h4>
+  <p class="mb-4 text-muted">Make your app management easy and fun!</p>
+
+  <form action="{{ url_for('register_forget.auth_action', mode='register') }}" method="POST" class="needs-validation"
+    novalidate>
+    <div class="mb-3">
+      <label class="form-label">Username</label>
+      <input type="text" name="username" class="form-control" placeholder="johndoe" required autofocus>
+      <div class="invalid-feedback">Please choose a username.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" placeholder="enter your email" required>
+      <div class="invalid-feedback">Please enter a valid email address.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <div class="input-group input-group-merge has-validation">
+        <input type="password" name="password" class="form-control password-field" placeholder="············" required>
+        <span class="input-group-text cursor-pointer toggle-password">
+          <i class="bx bx-hide"></i>
+        </span>
+        <div class="invalid-feedback">Please enter a password.</div>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label">Confirm Password</label>
+      <div class="input-group input-group-merge has-validation">
+        <input type="password" name="confirm_password" class="form-control password-field" placeholder="············"
+          required>
+        <span class="input-group-text cursor-pointer toggle-password">
+          <i class="bx bx-hide"></i>
+        </span>
+        <div class="invalid-feedback">Please confirm your password.</div>
+      </div>
+    </div>
+    <button class="btn btn-primary d-grid w-100 py-2" type="submit">Sign up</button>
+  </form>
+
+  {% else %}
+  <h4 class="mb-1">Forgot Password? 🔒</h4>
+  <p class="mb-4 text-muted">Enter your email and we'll send instructions</p>
+  <form action="{{ url_for('register_forget.auth_action', mode='forgot') }}" method="POST" class="needs-validation"
+    novalidate>
+    <div class="mb-4">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" placeholder="enter your email" required autofocus>
+      <div class="invalid-feedback">We need your email to reset your password.</div>
+    </div>
+    <button class="btn btn-primary d-grid w-100 py-2" type="submit">Send Reset Link</button>
+  </form>
+  {% endif %}
+  {% if mode == 'register' %}
+  <p class="text-center mt-4 mb-0">
+    <span>Already have an account?</span>
+    <a href="{{ url_for('login.login') }}" class="text-decoration-none">
+      <span>Sign in instead</span>
+    </a>
+  </p>
+  {% else %}
+  <p class="text-center mt-4 mb-0">
+    <a href="{{ url_for('login.login') }}" class="text-decoration-none">
+      <i class="bx bx-chevron-left"></i> Back to login
+    </a>
+  </p>
+  {% endif %}
+</div>
+
+{% endblock %}

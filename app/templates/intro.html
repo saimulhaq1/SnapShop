@@ -1,0 +1,142 @@
+<style>
+    #snapshop-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #007BFF;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+
+    .splash-logo-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .splash-logo {
+        width: 100px;
+        height: auto;
+        animation: pulseLogo 0.6s ease-in-out 1;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    }
+
+    .splash-text {
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        font-size: 3rem;
+        margin-top: 20px;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideUpText 0.4s forwards 0.5s;
+        /* Starts after pulse */
+    }
+
+    /* The Glint/Pop effect wrapper */
+    .splash-glint-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .splash-glint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        animation: popGlint 0.3s ease-out 0.9s;
+        /* Final pop before fade out */
+    }
+
+    @keyframes pulseLogo {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.15) rotate(-5deg);
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 1));
+        }
+    }
+
+    @keyframes slideUpText {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes popGlint {
+        0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(30);
+            opacity: 0;
+        }
+    }
+</style>
+
+<div id="snapshop-splash">
+    <div class="splash-logo-container">
+        <img src="{{ url_for('static', filename='assets/img/snapshop-logo.png') }}" class="splash-logo"
+            alt="SnapShop Logo"
+            onerror="this.onerror=null; this.src=''; this.outerHTML='<i class=\'bx bxs-zap bx-burst\' style=\'font-size: 6rem; color: white; display:block; margin:auto;\'></i>';">
+        <div class="splash-text">SnapShop</div>
+        <div class="splash-glint-wrapper">
+            <div class="splash-glint"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const splashScreen = document.getElementById('snapshop-splash');
+
+        if (splashScreen) {
+            // Check if splash screen already shown in this session
+            if (!sessionStorage.getItem('splashShown')) {
+                // Starts the timer to fade out after animation sequence finishes (~1.3s total)
+                setTimeout(() => {
+                    splashScreen.style.opacity = '0';
+                    splashScreen.style.visibility = 'hidden';
+                    sessionStorage.setItem('splashShown', 'true');
+
+                    // Remove from DOM after transition
+                    setTimeout(() => {
+                        if (splashScreen.parentNode) {
+                            splashScreen.parentNode.removeChild(splashScreen);
+                        }
+                    }, 500);
+                }, 1300);
+            } else {
+                // Already shown, hide immediately to prevent FOUC / blocking layout
+                splashScreen.style.display = 'none';
+            }
+        }
+    });
+</script>

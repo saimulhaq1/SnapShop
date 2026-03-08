@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block page_title %}Management Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">System Overview</h4>
+    <div class="d-flex align-items-center gap-3">
+        {% if session.get('role') == 'ADMIN' %}
+        <button type="button" class="btn btn-sm btn-danger fw-bold shadow-sm" data-bs-toggle="modal"
+            data-bs-target="#broadcastModal">
+            <i class="bx bx-broadcast me-1"></i> Broadcast Message
+        </button>
+        <span class="badge bg-label-warning"><i class="bx bx-shield-quarter me-1"></i> Admin Console</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Broadcast Modal -->
+<div class="modal fade" id="broadcastModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="broadcastModalTitle"><i class="bx bx-broadcast text-danger me-2"></i>Send
+                    Global Broadcast</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('dashboard.broadcast_sale') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="broadcast_target" class="form-label">Broadcast Target</label>
+                            <select class="form-select" id="broadcast_target" name="broadcast_target">
+                                <option value="CUSTOMER">All Customers (Sales & Promos)</option>
+                                <option value="ADMIN">All Admins (System Updates)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="broadcast_title" class="form-label">Alert Title</label>
+                            <input type="text" id="broadcast_title" name="broadcast_title" class="form-control"
+                                placeholder="e.g. Flash Sale is LIVE!" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col mb-0">
+                            <label for="broadcast_message" class="form-label">Message Content</label>
+                            <textarea id="broadcast_message" name="broadcast_message" class="form-control" rows="3"
+                                placeholder="Write your broadcast message here..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i class="bx bx-send me-1"></i>Send to All
+                        Customers</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row gy-4 mb-4">
+    {% if not session_user_permissions.get('dash_customers') %}
+    <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+        <a href="{{ url_for('customer.customers') }}" class="text-decoration-none text-dark d-block h-100">
+            <div class="card h-100 card-hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-success"><i class="bx bx-user"></i></span>
+                        </div>
+                        <h5 class="ms-1 mb-0">Customers</h5>
+                    </div>
+                    <h4 class="mb-1">{{ total_customers | default(0) }}</h4>
+                    <p class="mb-0 small text-muted">Registered users</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+
+    {% if not session_user_permissions.get('dash_products') %}
+    <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+        <a href="{{ url_for('product.products') }}" class="text-decoration-none text-dark d-block h-100">
+            <div class="card h-100 card-hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-primary"><i class="bx bx-package"></i></span>
+                        </div>
+                        <h5 class="ms-1 mb-0">Products</h5>
+                    </div>
+                    <h4 class="mb-1">{{ total_products | default(0) }}</h4>
+                    <p class="mb-0 small text-muted">Active in catalog</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+
+    {% if not session_user_permissions.get('dash_orders') %}
+    <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+        <a href="{{ url_for('order.order_list') }}" class="text-decoration-none text-dark d-block h-100">
+            <div class="card h-100 card-hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-info"><i class="bx bx-cart"></i></span>
+                        </div>
+                        <h5 class="ms-1 mb-0">Orders</h5>
+                    </div>
+                    <h4 class="mb-1">{{ total_orders | default(0) }}</h4>
+                    <p class="mb-0 small text-muted">Lifetime registry</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+    {% if not session_user_permissions.get('dash_orders') %}
+    <div class="col-xl-3 col-lg-3 col-md-6 col-6">
+        <a href="{{ url_for('order.order_list', status='PENDING') }}"
+            class="text-decoration-none text-dark d-block h-100">
+            <div class="card h-100 card-hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-warning"><i class="bx bx-time-five"></i></span>
+                        </div>
+                        <h5 class="ms-1 mb-0">Pending Ship's</h5>
+                    </div>
+                    <h4 class="mb-1">{{ pending_shipments | default(0) }}</h4>
+                    <p class="mb-0 small text-muted">Processing needed</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if session.get('role') == 'ADMIN' %}
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="card-title fw-bold mb-0">Top 5 Selling Products</h5>
+            </div>
+            <div class="card-body pt-3 pb-3">
+                <canvas id="topProductsChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="card-title fw-bold mb-0">Revenue (Last 7 Days)</h5>
+            </div>
+            <div class="card-body pt-3 pb-3">
+                <canvas id="revenueChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 bg-primary text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="d-block mb-1 small text-uppercase fw-bold">Collected Revenue</span>
+                        <h3 class="card-title text-white mb-0">Rs. {{ "%.2f"|format(total_revenue | default(0)) }}</h3>
+                        <small class="opacity-75">Actual cash from completed payments</small>
+                    </div>
+                    <div class="avatar bg-white-opacity-20 rounded p-2">
+                        <i class="bx bx-dollar fs-3 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 bg-success text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="d-block mb-1 small text-uppercase fw-bold">Estimated Net Profit</span>
+                        <h3 class="card-title text-white mb-0">Rs. {{ "%.2f"|format(total_profit_with_gst | default(0))
+                            }}</h3>
+                        <small class="opacity-75">Realized earnings margin</small>
+                    </div>
+                    <div class="avatar bg-white-opacity-20 rounded p-2">
+                        <i class="bx bx-trending-up fs-3 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-none border">
+            <div class="card-header border-bottom">
+                <h5 class="card-title mb-0"><i class="bx bx-bolt-circle me-2"></i>Quick Management</h5>
+            </div>
+            <div class="card-body pt-4">
+                <div class="row g-2">
+                    {% if not session_user_permissions.get('prod_add') %}
+                    <div class="col-6">
+                        <a href="{{ url_for('manage_product.manage_product') }}"
+                            class="btn btn-outline-primary btn-sm w-100 text-start">
+                            <i class="bx bx-plus me-1"></i> New Product
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if not session_user_permissions.get('hide_category_page') %}
+                    <div class="col-6">
+                        <a href="{{ url_for('categories.category_list') }}"
+                            class="btn btn-outline-primary btn-sm w-100 text-start">
+                            <i class="bx bx-category me-1"></i> Categories
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if not session_user_permissions.get('hide_payment_page') %}
+                    <div class="col-6">
+                        <a href="{{ url_for('payment.payments') }}"
+                            class="btn btn-outline-secondary btn-sm w-100 text-start">
+                            <i class="bx bx-credit-card me-1"></i> Payments
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if not session_user_permissions.get('hide_customers') %}
+                    <div class="col-6">
+                        <a href="{{ url_for('customer.customers') }}"
+                            class="btn btn-outline-secondary btn-sm w-100 text-start">
+                            <i class="bx bx-user-pin me-1"></i> User Registry
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-none border">
+            <div class="card-header border-bottom">
+                <h5 class="card-title mb-0"><i class="bx bx-box me-2"></i>Inventory Status</h5>
+            </div>
+            <div class="card-body pt-4">
+                {% if low_stock_count > 0 %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar me-3">
+                        <span class="avatar-initial rounded bg-label-danger"><i class="bx bx-error"></i></span>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 text-danger">{{ low_stock_count }} Items Low on Stock</h6>
+                        <small class="text-muted">Requires immediate restock</small>
+                    </div>
+                </div>
+                <a href="{{ url_for('product.products') }}" class="btn btn-danger btn-sm w-100">Open Stock Manager</a>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bx bx-check-shield fs-1 text-success"></i>
+                    <p class="mt-2 mb-0 fw-bold">Inventory levels are healthy.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-none border">
+            <div class="card-header d-flex align-items-center justify-content-between border-bottom">
+                <h5 class="card-title m-0">Recent Sales Activity</h5>
+                <a href="{{ url_for('order.order_list') }}" class="btn btn-sm btn-outline-primary">View Full
+                    Registry</a>
+            </div>
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in recent_orders %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('order.order_detail', id=o.order_id) }}" class="fw-bold">#{{
+                                    o.order_id }}</a>
+                                <div class="small text-muted" style="font-size: 0.7rem;">{{ o.order_date.strftime('%d
+                                    %b, %Y') }}</div>
+                            </td>
+                            <td>{{ o.customer_link.name if o.customer_link else "Guest" }}</td>
+                            <td>
+                                <span
+                                    class="badge bg-label-{{ 'success' if o.status.name == 'DELIVERED' else 'primary' }}">
+                                    {{ o.status.name.title() }}
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold">Rs. {{ "%.2f"|format(o.total_amount | default(0)) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="dashboard-data" type="application/json">
+{
+    "top_products_labels": {{ top_products_labels | tojson | safe }},
+    "top_products_data": {{ top_products_data | tojson | safe }},
+    "revenue_labels": {{ revenue_labels | tojson | safe }},
+    "revenue_data": {{ revenue_data | tojson | safe }}
+}
+</script>
+<script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
+{% endblock %}

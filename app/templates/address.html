@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block page_title %} Global Address Management (Admin) {% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Global Address Registry</h4>
+    <span class="badge bg-label-warning"><i class="bx bx-shield-quarter me-1"></i> Admin View</span>
+</div>
+
+<div class="card mb-4 shadow-none border">
+    <div class="card-body">
+        <form class="row g-3" method="get" action="{{ url_for('address.addresses') }}">
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Search By</label>
+                    <select name="search_type" class="form-select">
+                        <option value="" {% if not request.args.get('search_type') %}selected{% endif %}>Select Filter
+                            Type</option>
+                        <option value="id" {% if request.args.get('search_type')=='id' %}selected{% endif %}>Address ID
+                        </option>
+                        <option value="customer" {% if request.args.get('search_type')=='customer' %}selected{% endif
+                            %}>Customer Name</option>
+                        <option value="title" {% if request.args.get('search_type')=='title' %}selected{% endif %}>
+                            Address Title</option>
+                        <option value="address" {% if request.args.get('search_type')=='address' %}selected{% endif %}>
+                            Street Address</option>
+                        <option value="city" {% if request.args.get('search_type')=='city' %}selected{% endif %}>City
+                            Name</option>
+                        <option value="zip" {% if request.args.get('search_type')=='zip' %}selected{% endif %}>Zip Code
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="form-label small fw-bold text-uppercase">Search Value</label>
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Type search keyword here..."
+                            value="{{ request.args.get('q', '') }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Status Filter</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for s in CommonStatus %}
+                        <option value="{{ s.name }}" {% if request.args.get('status')==s.name %}selected{% endif %}>
+                            {{ s.name.title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small fw-bold text-uppercase">Sort Order</label>
+                    <select name="direction" class="form-select">
+                        <option value="asc" {% if request.args.get('direction', 'asc' )=='asc' %}selected{% endif %}>
+                            Oldest First</option>
+                        <option value="desc" {% if request.args.get('direction')=='desc' %}selected{% endif %}>Newest
+                            First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-2 d-flex flex-column justify-content-end gap-2">
+                <button class="btn btn-primary w-100 py-2" type="submit">
+                    <i class="bx bx-filter-alt me-1"></i> Search
+                </button>
+
+                {# Reset Button: Only shows if search parameters are active #}
+                {% if request.args.get('q') or request.args.get('status') or request.args.get('search_type') %}
+                <a href="{{ url_for('address.addresses') }}" class="btn btn-outline-danger w-100 py-2">
+                    <i class="bx bx-refresh me-1"></i> Reset
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-none border">
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;">ID</th>
+                    <th>Customer</th>
+                    <th>Title</th>
+                    <th>Street Address</th>
+                    <th>City</th>
+                    <th>Zip</th>
+                    <th class="text-end">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in addresses %}
+                <tr>
+                    <td><span class="fw-bold">#{{ a.address_id }}</span></td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <a href="{{ url_for('customer.customers') }}" class="fw-bold text-primary">
+                                {{ a.customer_link.name if a.customer_link else "Unknown" }}
+                            </a>
+                            <small class="text-muted">UID: {{ a.customer_id }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-label-info">{{ a.address_title or "Standard" }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-lock-open-alt text-warning me-2" title="Full Admin Access"></i>
+                            <span title="{{ a.address }}">
+                                {{ a.address[:35] }}{% if a.address|length > 35 %}...{% endif %}
+                            </span>
+                        </div>
+                    </td>
+                    <td>{{ a.zip_link.city.city_name if a.zip_link and a.zip_link.city else "-" }}</td>
+                    <td><code class="text-primary">{{ a.zip_link.zip_code_name if a.zip_link else "-" }}</code></td>
+                    <td class="text-end">
+                        <select class="form-select form-select-sm fw-bold
+                            {% if a.status.name == 'ACTIVE' %}text-success border-success
+                            {% elif a.status.name == 'INACTIVE' %}text-warning border-warning
+                            {% else %}text-danger border-danger{% endif %}"
+                            onchange="updateAddressStatus('{{ a.address_id }}', this.value, this)">
+                            {% for s in CommonStatus %}
+                            <option value="{{ s.name }}" {% if a.status.name==s.name %}selected{% endif %}>
+                                {{ s.name.title() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bx bx-map-alt fs-1 d-block mb-2"></i>
+                        No address records found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block page_title %}Add New Admin{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center border-bottom">
+            <h5 class="mb-0"><i class="bx bx-user-plus me-2"></i>Register New Admin Staff</h5>
+            <span class="badge bg-label-primary">Step 1: Account Setup</span>
+        </div>
+
+        <div class="card-body pt-4">
+            <form action="{{ url_for('admin_staff.create_employee') }}" method="POST" class="needs-validation"
+                novalidate>
+                <div class="row">
+                    <div class="mb-3 col-md-6">
+                        <label class="form-label fw-bold">Full Name</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-user"></i></span>
+                            <input type="text" class="form-control" name="name" placeholder="Enter full name"
+                                required />
+                        </div>
+                        <div class="invalid-feedback">Please enter a name for the staff member.</div>
+                    </div>
+
+                    <div class="mb-3 col-md-6">
+                        <label class="form-label fw-bold">Official Email</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-envelope"></i></span>
+                            <input type="email" class="form-control" name="email" placeholder="email@system.com"
+                                required />
+                        </div>
+                        <div class="invalid-feedback">A valid email is required for login.</div>
+                    </div>
+
+                    <div class="mb-3 col-md-6">
+                        <label class="form-label fw-bold">Login Password</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-lock-alt"></i></span>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="············" required />
+                            <span class="input-group-text cursor-pointer password-toggle-btn" style="z-index: 5;">
+                                <i class="bx bx-hide"></i>
+                            </span>
+                        </div>
+                        <div class="invalid-feedback">Please set a temporary password.</div>
+                    </div>
+
+                    <div class="mb-3 col-md-6">
+                        <label class="form-label fw-bold">Confirm Password</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-check-shield"></i></span>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                                placeholder="············" required />
+                            <span class="input-group-text cursor-pointer password-toggle-btn" style="z-index: 5;">
+                                <i class="bx bx-hide"></i>
+                            </span>
+                        </div>
+                        <div class="invalid-feedback">Passwords must match.</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-2 border-top d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="bx bx-user-plus me-1"></i> Create Admin Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="{{ url_for('static', filename='js/create_admin_actions.js') }}"></script>
+{% endblock %}

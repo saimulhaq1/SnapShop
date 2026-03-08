@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ 'Edit' if category.cat_id else 'Add' }} Category{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category_msg, message in messages %}
+    <div class="alert alert-{{ category_msg if category_msg != 'error' else 'danger' }} alert-dismissible mb-4"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center border-bottom">
+            <h5 class="mb-0">{{ 'Edit' if category.cat_id else 'Create New' }} Category</h5>
+            {% if category.cat_id %}
+            <span class="badge bg-label-secondary">System ID: #{{ category.cat_id }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body pt-4">
+            <form method="POST" class="needs-validation" novalidate enctype="multipart/form-data"
+                action="{{ url_for('manage_category.manage_category', id=category.cat_id if category.cat_id else None) }}">
+
+                <div class="row">
+                    <div class="mb-4 col-md-12">
+                        <label class="form-label fw-bold">Assign Parent Category</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-git-merge"></i></span>
+                            <select name="parent_cat_id" class="form-select border-primary shadow-none">
+                                <option value="0">--- None (Set as Top-Level Category) ---</option>
+                                {% for parent in all_categories %}
+                                {# Prevent assigning a category to itself #}
+                                {% if parent.cat_id != category.cat_id %}
+                                <option value="{{ parent.cat_id }}" {% if category.parent_cat_id==parent.cat_id
+                                    %}selected{% endif %}>
+                                    {% if parent.parent_cat_id %} ↳ {% endif %} {{ parent.cat_name }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <small class="text-muted">Organize your store hierarchy (e.g., Laptops under Computers).</small>
+                    </div>
+
+                    <div class="mb-3 col-md-6">
+                        <label class="form-label fw-bold">Category Name</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-category"></i></span>
+                            <input type="text" class="form-control" name="cat_name" id="cat_name"
+                                value="{{ category.cat_name or '' }}" placeholder="e.g. Smart Appliances" required />
+                        </div>
+                        <div class="invalid-feedback">Please enter a unique category name.</div>
+                    </div>
+
+                    <div class="mb-3 col-md-6">
+                        <label class="form-label fw-bold">Category Image (Icon)</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-image-add"></i></span>
+                            <input type="file" class="form-control" name="image" id="image" accept="image/*" />
+                        </div>
+                        <small class="text-muted">Used for dynamic display on the homepage.</small>
+                    </div>
+
+                    <div class="mb-3 col-md-3">
+                        <label class="form-label fw-bold">Status</label>
+                        <select name="status" class="form-select fw-bold text-primary" required>
+                            {% for s in CommonStatus %}
+                            <option value="{{ s.name }}" {% if category.status and category.status.name==s.name
+                                %}selected{% endif %}>
+                                {{ s.name.title() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3 col-md-3">
+                        <label class="form-label fw-bold">Category Discount (%)</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="bx bx-purchase-tag-alt"></i></span>
+                            <input type="number" step="0.1" class="form-control" name="discount"
+                                value="{{ category.discount or 0 }}" placeholder="0.0" />
+                        </div>
+                        <small class="text-muted">Global discount for this category.</small>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('categories.category_list') }}" class="btn btn-outline-secondary">
+                        <i class="bx bx-x me-1"></i> Discard
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="bx bx-check me-1"></i> Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

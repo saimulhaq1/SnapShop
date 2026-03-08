@@ -1,0 +1,71 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="card-body p-sm-5 p-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <div
+    class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4 shadow-sm"
+    role="alert">
+    <div class="d-flex align-items-center">
+      <i class="bx {{ 'bx-check-circle' if category == 'success' else 'bx-error' }} me-2"></i>
+      <div>{{ message|safe }}</div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <h4 class="mb-1">Welcome back! 👋🏻</h4>
+  <p class="mb-4 text-muted">Please sign-in to your account and start the adventure</p>
+
+  <form id="formAuthentication" class="mb-4 needs-validation" action="{{ url_for('login.login') }}" method="POST"
+    novalidate>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="{{ email or '' }}" placeholder="Enter your email"
+        required autofocus>
+      <div class="invalid-feedback">Please enter a valid email address.</div>
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex justify-content-between">
+        <label class="form-label">Password</label>
+        <a href="{{ url_for('register_forget.auth_action', mode='forgot') }}">
+          <small>Forgot Password?</small>
+        </a>
+      </div>
+      <div class="input-group input-group-merge has-validation">
+        <input type="password" id="password" name="password" class="form-control password-field"
+          placeholder="············" required>
+        <span class="input-group-text cursor-pointer toggle-password" id="togglePassword">
+          <i class="bx bx-hide" id="eyeIcon"></i>
+        </span>
+        <div class="invalid-feedback">Please enter your password.</div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="remember-me">
+        <label class="form-check-label" for="remember-me"> Remember Me </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary d-grid w-100 py-2" type="submit">Login</button>
+  </form>
+
+  <p class="text-center mb-0">
+    <span>New on our platform?</span>
+    <a href="{{ url_for('register_forget.auth_action', mode='register') }}" class="text-decoration-none">
+      <span>Create an account</span>
+    </a>
+  </p>
+
+</div>
+
+{% endblock %}

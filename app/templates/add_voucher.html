@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block page_title %}Add New Voucher{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row w-100 justify-content-center m-0">
+        <div class="col-12 col-lg-8 p-0">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center">
+                    <a href="{{ url_for('voucher_admin.list_vouchers') }}"
+                        class="btn btn-icon btn-outline-secondary btn-sm me-3">
+                        <i class="bx bx-arrow-back"></i>
+                    </a>
+                    <h5 class="mb-0 fw-bold">Add New Voucher</h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form action="{{ url_for('voucher_admin.add_voucher') }}" method="POST">
+                        <div class="row g-3">
+                            <!-- Basic Info -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-primary">Voucher Code *</label>
+                                <input type="text" name="code" class="form-control" placeholder="e.g. SUMMER20" required
+                                    style="text-transform: uppercase;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-primary">Voucher Name *</label>
+                                <input type="text" name="name" class="form-control" placeholder="e.g. Summer Sale 2026"
+                                    required>
+                            </div>
+
+                            <!-- Discount Configuration -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Discount Type *</label>
+                                <select name="discount_type" id="discountType" class="form-select" required
+                                    onchange="updateDiscountSymbol()">
+                                    <option value="Percentage">Percentage (%)</option>
+                                    <option value="Fixed">Fixed Amount (RS)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Discount Value *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="discountSymbol">%</span>
+                                    <input type="number" step="0.01" name="discount_value" class="form-control"
+                                        placeholder="e.g. 20" required>
+                                </div>
+                            </div>
+
+                            <!-- Constraints -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Target Category</label>
+                                <select name="category_id" class="form-select">
+                                    <option value="">-- All Categories --</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.cat_id }}">{{ cat.cat_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Leave empty to apply to all products</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Minimum Cart Value</label>
+                                <input type="number" step="0.01" name="min_cart_value" class="form-control"
+                                    placeholder="e.g. 100.00" value="0">
+                            </div>
+
+                            <!-- Validity -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">Valid From *</label>
+                                <input type="datetime-local" name="start_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">Valid Until *</label>
+                                <input type="datetime-local" name="end_date" class="form-control" required>
+                            </div>
+
+                            <!-- Special Conditions -->
+                            <div class="col-12 mt-4">
+                                <label class="form-label fw-bold border-bottom pb-2 mb-3 d-block"><i
+                                        class="bx bx-check-shield me-2"></i>Special Constraints</label>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="new_custom"
+                                        name="new_customer_only">
+                                    <label class="form-check-label" for="new_custom">New Customers Only (Account < 24
+                                            hrs)</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="first_order"
+                                        name="first_order_only">
+                                    <label class="form-check-label" for="first_order">First Order Only (0 previous
+                                        successful orders)</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="one_time" name="one_time_use"
+                                        checked>
+                                    <label class="form-check-label" for="one_time">One-Time Use Per User</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12 pt-3">
+                                <button type="submit" class="btn btn-primary px-5 btn-lg w-100 shadow-sm">
+                                    <i class="bx bx-save me-1"></i> Save Voucher
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/voucher_actions.js') }}"></script>
+{% endblock %}

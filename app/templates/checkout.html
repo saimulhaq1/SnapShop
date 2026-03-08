@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        {# --- LEFT COLUMN: Shipping & Payment (col-md-8) --- #}
+        <div class="col-md-8">
+            <h4 class="mb-4">Checkout</h4>
+
+            {# Shipping Details Card #}
+            <div class="card shadow-none border mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="card-title mb-0"><i class="bx bx-map-pin me-2"></i>Shipping Details</h5>
+                </div>
+                <div class="card-body pt-4">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Recipient</p>
+                            <p class="fw-bold text-dark">{{ user.name }}</p>
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Mobile</p>
+                            <p class="text-dark">{{ user.mobile_no }}</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <p class="mb-1 text-muted small text-uppercase fw-bold">Address</p>
+                            <p class="text-dark mb-1">{{ address_rec.address }}</p>
+                            <p class="text-dark">
+                                {{ address_rec.zip_code.city.city_name if address_rec.zip_code else '' }},
+                                {{ address_rec.zip_code.zip_code_name if address_rec.zip_code else '' }}
+                            </p>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <a href="{{ url_for('complete_profile.complete_profile', next_url=url_for('cart.checkout')) }}"
+                        class="btn btn-sm btn-outline-secondary">
+                        <i class="bx bx-edit-alt me-1"></i> Edit Shipping Info
+                    </a>
+                </div>
+            </div>
+
+            {# Payment Selection Card #}
+            <div class="card shadow-none border mb-4">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="card-title mb-0"><i class="bx bx-credit-card me-2"></i>Select Payment Method</h5>
+                </div>
+                <div class="card-body pt-4">
+                    <form method="POST" id="checkoutForm" action="{{ url_for('cart.checkout') }}">
+                        <input type="hidden" name="address_title_hidden"
+                            value="{{ address_rec.address_title or 'Shipping Address' }}">
+
+                        {# 1. DIGITAL WALLET OPTION #}
+                        <div class="payment-option-wrapper mb-3">
+                            <div class="form-check custom-option custom-option-basic border rounded p-3">
+                                <label class="form-check-label w-100" for="walletMethod">
+                                    <input class="form-check-input me-2" type="radio" name="payment_method"
+                                        id="walletMethod" value="Digital Wallet" checked>
+                                    <span class="h6 mb-1 fw-bold d-block">Digital Wallet (Easypaisa/JazzCash)</span>
+                                    <div id="walletInfoSection" class="mt-3 p-3 bg-light rounded border">
+                                        <label class="small text-muted fw-bold mb-1">Wallet Number</label>
+                                        {# UPDATED: Added Numeric Validation #}
+                                        <input type="text" name="wallet_number" id="walletInput"
+                                            class="form-control mb-2" placeholder="03XXXXXXXXX" inputmode="numeric"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="11">
+
+                                        <label class="small text-muted fw-bold mb-1">Account Holder Name</label>
+                                        <input type="text" name="account_holder_name" id="walletNameInput"
+                                            class="form-control" placeholder="Name on Account (e.g. John Doe)" required>
+
+                                        <small class="text-info mt-1 d-block">Admin will verify this account.</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {# 2. CREDIT/DEBIT CARD OPTION #}
+                        <div class="payment-option-wrapper mb-3">
+                            <div class="form-check custom-option custom-option-basic border rounded p-3">
+                                <label class="form-check-label w-100" for="cardMethod">
+                                    <input class="form-check-input me-2" type="radio" name="payment_method"
+                                        id="cardMethod" value="Card">
+                                    <span class="h6 mb-1 fw-bold d-block">Credit or Debit Card</span>
+                                    <div id="cardFields" class="mt-3 p-3 bg-light rounded border" style="display:none;">
+                                        <div class="mb-3">
+                                            <label class="small text-muted fw-bold mb-1">Card Number</label>
+                                            {# UPDATED: Added Numeric Validation #}
+                                            <input type="text" name="card_number" id="cardInput"
+                                                class="form-control mb-2" placeholder="1234 5678 9101 1121"
+                                                inputmode="numeric"
+                                                oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                                maxlength="19">
+
+                                            <label class="small text-muted fw-bold mb-1">Card Holder Name</label>
+                                            <input type="text" name="name_on_card" id="cardNameInput"
+                                                class="form-control" placeholder="Name on Card" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="small text-muted fw-bold mb-1">Expiry (MM/YY)</label>
+                                                <input type="text" name="expiry" id="expiryInput" class="form-control"
+                                                    placeholder="12/28" maxlength="5">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="small text-muted fw-bold mb-1">CVC</label>
+                                                {# UPDATED: Added Numeric Validation #}
+                                                <input type="text" name="cvc" id="cvcInput" class="form-control"
+                                                    placeholder="123" inputmode="numeric"
+                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                                    maxlength="4">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {# 3. CASH ON DELIVERY OPTION #}
+                        <div class="payment-option-wrapper mb-4">
+                            <div class="form-check custom-option custom-option-basic border rounded p-3">
+                                <label class="form-check-label w-100" for="cod">
+                                    <input class="form-check-input me-2" type="radio" name="payment_method" id="cod"
+                                        value="COD">
+                                    <span class="h6 mb-0 fw-bold">Cash on Delivery</span>
+                                    <small class="text-muted d-block">Pay when you receive the package.</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm py-3">
+                                <i class="bx bx-check-double me-1"></i> Confirm & Place Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# --- RIGHT COLUMN: Order Summary (col-md-4) --- #}
+        <div class="col-md-4">
+            <div class="card shadow-none border sticky-top" style="top: 20px;">
+                <div class="card-header bg-light border-bottom">
+                    <h5 class="card-title mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="cart-items-preview mb-3" style="max-height: 300px; overflow-y: auto;">
+                        {% for item in cart_details %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 small fw-bold">{{ item['product'].name }}</h6>
+                                <small class="text-muted">Qty: {{ item['qty'] }}</small>
+                            </div>
+                            <span class="small fw-bold text-dark">Rs. {{ "{:,.2f}".format(item['row_total']) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Subtotal</span>
+                        <span class="text-dark small">Rs. {{ "{:,.2f}".format(subtotal) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Tax (GST)</span>
+                        <span class="text-danger small">+ Rs. {{ "{:,.2f}".format(total_tax) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small"><i class="bx bx-truck me-1"></i>Delivery</span>
+                        {% if delivery_charge and delivery_charge > 0 %}
+                        <span class="text-warning small fw-bold">+ Rs. {{ "{:,.2f}".format(delivery_charge) }}</span>
+                        {% else %}
+                        <span class="text-success small fw-bold">FREE</span>
+                        {% endif %}
+                    </div>
+
+                    {% if voucher_discount and voucher_discount > 0 %}
+                    <div class="d-flex justify-content-between mb-3 text-success">
+                        <span class="small fw-bold"><i class="bx bxs-discount me-1"></i>Voucher ({{ voucher.code
+                            }})</span>
+                        <span class="small fw-bold">- Rs. {{ "{:,.2f}".format(voucher_discount) }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <span class="h5 mb-0 fw-bold">Total Payable</span>
+                        <span class="h5 mb-0 fw-bold text-primary">Rs. {{ "{:,.2f}".format(total_payable) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

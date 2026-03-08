@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" class="layout-compact">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapShop - {% block page_title %}Management System{% endblock %}</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/core.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/demo.css') }}">
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}">
+
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2.0">
+
+    <script src="{{ url_for('static', filename='assets/vendor/js/helpers.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/config.js') }}"></script>
+</head>
+
+<body>
+    {% include 'intro.html' %}
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+
+            {% set ep = request.endpoint if request.endpoint else '' %}
+            {% set is_admin = session.get('role') in ['ADMIN', 'STAFF'] %}
+            {% set perms = session.get('session_user_permissions', {}) %}
+
+            {% if is_admin %}
+            <!-- Admin Sidebar Menu -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme shadow-sm pe-2">
+                <div class="app-brand demo my-3">
+                    <a href="{{ url_for('dashboard.dashboard') if is_admin else url_for('product.products') }}"
+                        class="app-brand-link">
+                        <img src="{{ url_for('static', filename='assets/img/snapshop-logo.png') }}" alt="SnapShop Logo"
+                            height="24" class="me-2" onerror="this.style.display='none'">
+                        {% if is_admin %}SnapShop Admin{% else %}SnapShop{% endif %}
+                    </a>
+                    <a href="javascript:void(0);"
+                        class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                        <i class="bx bx-chevron-left bx-sm align-middle"></i>
+                    </a>
+                </div>
+
+                <div class="menu-inner-shadow"></div>
+
+                <ul class="menu-inner py-1">
+                    {% if is_admin %}
+                    {# DASHBOARD TAB #}
+                    {% if not perms.get('hide_dashboard') %}
+                    <li class="menu-item {% if ep == 'dashboard.dashboard' %}active{% endif %}">
+                        <a href="{{ url_for('dashboard.dashboard') }}" class="menu-link">
+                            <i class="menu-icon bx bx-home-circle"></i>
+                            <div data-i18n="Analytics">Dashboard</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {# STAFF MANAGEMENT - Blueprint: staff #}
+                    {% if session.get('is_super_admin') %}
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Staff Management</span>
+                    </li>
+                    <li class="menu-item {% if ep.startswith('admin_staff.') %}active open{% endif %}">
+                        <a href="javascript:void(0);" class="menu-link menu-toggle">
+                            <i class="menu-icon tf-icons bx bx-user-check"></i>
+                            <div data-i18n="Admins">Admin Controls</div>
+                        </a>
+                        <ul class="menu-sub">
+                            <li class="menu-item {% if ep == 'admin_staff.create_employee' %}active{% endif %}">
+                                <a href="{{ url_for('admin_staff.create_employee') }}" class="menu-link">
+                                    <div>Add New Admin</div>
+                                </a>
+                            </li>
+                            <li class="menu-item {% if ep == 'admin_staff.manage_roles' %}active{% endif %}">
+                                <a href="{{ url_for('admin_staff.manage_roles') }}" class="menu-link">
+                                    <div>Assign Roles/Duties</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    {# USER REGISTRY SECTION - Blueprint: customer_admin / address_admin #}
+                    {% if not perms.get('hide_customer_page') or not perms.get('hide_address_page') %}
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">User Registry</span>
+                    </li>
+
+                    {% if not perms.get('hide_customer_page') %}
+                    <li class="menu-item {% if ep == 'customer.customers' %}active{% endif %}">
+                        <a href="{{ url_for('customer.customers') }}" class="menu-link">
+                            <i class="menu-icon bx bx-user"></i>
+                            <div data-i18n="Customers">Customers</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not perms.get('hide_address_page') %}
+                    <li class="menu-item {% if ep == 'address.addresses' %}active{% endif %}">
+                        <a href="{{ url_for('address.addresses') }}" class="menu-link">
+                            <i class="bx bx-map menu-icon"></i>
+                            <div data-i18n="Addresses">Global Addresses</div>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+
+                    {# STORE CATALOG SECTION - Blueprints: catalog / shop #}
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Store Catalog</span>
+                    </li>
+
+                    {% if not is_admin or not perms.get('hide_product_page') %}
+                    <li class="menu-item {% if ep == 'product.products' %}active{% endif %}">
+                        <a href="{{ url_for('product.products') }}" class="menu-link">
+                            <i class="menu-icon bx bx-package"></i>
+                            <div data-i18n="Products">Products</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if is_admin and not perms.get('hide_category_page') %}
+                    <li class="menu-item {% if ep == 'categories.category_list' %}active{% endif %}">
+                        <a href="{{ url_for('categories.category_list') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-grid-alt"></i>
+                            <div data-i18n="Categories">Categories</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if is_admin and not perms.get('hide_banner_page') %}
+                    <li class="menu-item {% if ep and ep.startswith('banner_admin.') %}active{% endif %}">
+                        <a href="{{ url_for('banner_admin.manage_banners') }}" class="menu-link">
+                            <i class="menu-icon bx bx-carousel"></i>
+                            <div data-i18n="Banners">Hero Banners</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if is_admin and not perms.get('hide_voucher_page') %}
+                    <li class="menu-item {% if ep and ep.startswith('voucher_admin.') %}active{% endif %}">
+                        <a href="{{ url_for('voucher_admin.list_vouchers') }}" class="menu-link">
+                            <i class="menu-icon bx bx-purchase-tag-alt"></i>
+                            <div data-i18n="Vouchers">Vouchers</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if is_admin and not perms.get('hide_reviews_page') %}
+                    <li class="menu-item {% if ep == 'reviews.manage_reviews' %}active{% endif %}">
+                        <a href="{{ url_for('reviews.manage_reviews') }}" class="menu-link">
+                            <i class="menu-icon bx bx-comment-detail"></i>
+                            <div data-i18n="Reviews">Product Feedback</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">My Activity</span></li>
+
+                    {# ORDERS - Blueprint: order_mgmt #}
+                    {% if not is_admin or not perms.get('hide_order_page') %}
+                    <li class="menu-item {% if ep.startswith('order.') %}active{% endif %}">
+                        <a href="{{ url_for('order.order_list') }}" class="menu-link">
+                            <i class="menu-icon bx bx-cart"></i>
+                            <div>{% if is_admin %}Orders{% else %}My Orders{% endif %}</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not is_admin %}
+                    {# CART - Blueprint: cart #}
+                    <li class="menu-item {% if ep == 'cart.cart_view' %}active{% endif %}">
+                        <a href="{{ url_for('cart.cart_view') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-cart"></i>
+                            <div data-i18n="My Cart">My Cart</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {# PAYMENTS - Blueprint: payment_ledger #}
+                    {% if not is_admin or not perms.get('hide_payment_page') %}
+                    <li class="menu-item {% if ep.startswith('payment.') %}active{% endif %}">
+                        <a href="{{ url_for('payment.payments') }}" class="menu-link">
+                            <i class="menu-icon bx bx-credit-card"></i>
+                            <div>{% if is_admin %}Payments{% else %}My Payments{% endif %}</div>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {# ADMIN PROFILE & LOGOUT #}
+                    {% if is_admin and session.get('user_id') %}
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Account</span></li>
+                    <li class="menu-item {% if ep == 'profile.profile_settings' %}active{% endif %}">
+                        <a href="{{ url_for('profile.profile_settings') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-user-circle"></i>
+                            <div data-i18n="My Profile">My Profile</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ url_for('login.logout') }}" class="menu-link text-danger">
+                            <i class="menu-icon bx bx-log-out-circle"></i>
+                            <div>Logout</div>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+                {% block cust_drawer %}
+                {% if not is_admin %}
+                <!-- Customer: slide-out drawer overlay -->
+                <div class="cust-drawer-overlay" id="custDrawerOverlay" onclick="closeCustDrawer()"></div>
+                <!-- Customer: slide-out drawer panel -->
+                <div class="cust-drawer" id="custDrawer">
+                    <!-- Amazon-style dark header -->
+                    <div class="cust-drawer-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bx bx-user-circle" style="font-size: 1.6rem;"></i>
+                            <strong>Hello{% if session.get('user_id') %}, {{ session.get('username', 'Customer') }}{%
+                                endif %}</strong>
+                        </div>
+                        <button onclick="closeCustDrawer()" class="btn-close btn-close-white"
+                            aria-label="Close"></button>
+                    </div>
+                    <nav class="cust-drawer-nav flex-grow-1" style="overflow-y: auto;">
+
+                        <!-- ═══ TRENDING ═══ -->
+                        <div class="cust-drawer-section">
+                            <i class="bx bx-trending-up me-1"></i> Trending
+                        </div>
+                        {% if sidebar_trending %}
+                        {% for p in sidebar_trending %}
+                        <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
+                            <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                                class="sidebar-thumb">
+                            <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
+                        </a>
+                        {% endfor %}
+                        {% else %}
+                        <div class="cust-drawer-empty">No trending items this week</div>
+                        {% endif %}
+
+                        <!-- ═══ BEST SELLERS ═══ -->
+                        <div class="cust-drawer-section">
+                            <i class="bx bxs-hot me-1" style="color: #e47911;"></i> Best Sellers
+                        </div>
+                        {% if sidebar_best_sellers %}
+                        {% for p in sidebar_best_sellers %}
+                        <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
+                            <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                                class="sidebar-thumb">
+                            <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
+                        </a>
+                        {% endfor %}
+                        {% else %}
+                        <div class="cust-drawer-empty">No best sellers this week</div>
+                        {% endif %}
+
+                        <!-- ═══ NEW RELEASES ═══ -->
+                        <div class="cust-drawer-section">
+                            <i class="bx bx-star me-1" style="color: #007BFF;"></i> New Releases
+                        </div>
+                        {% if sidebar_new_releases %}
+                        {% for p in sidebar_new_releases %}
+                        <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
+                            <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                                class="sidebar-thumb">
+                            <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
+                        </a>
+                        {% endfor %}
+                        {% else %}
+                        <div class="cust-drawer-empty">No new products this week</div>
+                        {% endif %}
+
+                        <!-- ═══ SHOP BY DEPARTMENT ═══ -->
+                        <div class="cust-drawer-section">
+                            <i class="bx bx-store me-1"></i> Shop By Department
+                        </div>
+                        <a href="{{ url_for('product.products') }}"><i class="bx bx-grid-alt"></i> All Products</a>
+                        {% if sidebar_categories %}
+                        {% for cat in sidebar_categories %}
+                        <a href="{{ url_for('product.products', category_id=cat.cat_id) }}"
+                            class="d-flex justify-content-between align-items-center">
+                            <span>{{ cat.cat_name }}</span>
+                            {% if cat.subcategories %}<i class="bx bx-chevron-right"
+                                style="font-size:1.1rem; color:#999;"></i>{% endif %}
+                        </a>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- ═══ HELP & SETTINGS ═══ -->
+                        <div class="cust-drawer-section">
+                            <i class="bx bx-cog me-1"></i> Help & Settings
+                        </div>
+                        {% if session.get('user_id') %}
+                        <a href="{{ url_for('order.order_list') }}"><i class="bx bx-package"></i> Your Orders</a>
+                        <a href="{{ url_for('cart.cart_view') }}"><i class="bx bx-cart"></i> Your Cart</a>
+                        <a href="{{ url_for('payment.payments') }}"><i class="bx bx-credit-card"></i> Your Payments</a>
+                        <a href="{{ url_for('profile.profile_settings') }}"><i class="bx bx-user"></i> Your Account</a>
+                        <a href="{{ url_for('system.about') }}"><i class="bx bx-info-circle"></i> About SnapShop</a>
+                        <a href="{{ url_for('system.support') }}"><i class="bx bx-help-circle"></i> Customer Service</a>
+                        <a href="{{ url_for('login.logout') }}" class="text-danger"><i class="bx bx-log-out"></i> Sign
+                            Out</a>
+                        {% else %}
+                        <a href="{{ url_for('login.login') }}"><i class="bx bx-log-in"></i> Sign In</a>
+                        <a href="{{ url_for('system.about') }}"><i class="bx bx-info-circle"></i> About SnapShop</a>
+                        <a href="{{ url_for('system.support') }}"><i class="bx bx-help-circle"></i> Customer Service</a>
+                        {% endif %}
+                    </nav>
+                </div>
+                <!-- Floating hamburger button -->
+                <button class="cust-menu-toggle" onclick="openCustDrawer()" aria-label="Menu">
+                    <i class="bx bx-menu"></i>
+                </button>
+                {% endif %}
+                {% endblock %}
+
+                <div class="layout-page {% if not is_admin %}customer-layout-page{% endif %}">
+                    <div class="content-wrapper">
+                        <div class="container-xxl flex-grow-1 container-p-y">
+
+                            {% if is_admin %}
+                            <div class="alert alert-dark d-flex justify-content-between align-items-center mb-4 py-2 shadow-sm"
+                                role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="bx bx-shield-quarter me-2"></i>
+                                    <div class="small fw-bold"> Administrator Session Active
+                                        {% if session.get('is_super_admin') %}(Super User){% endif %}
+                                    </div>
+                                </div>
+                                <!-- Admin Notification Bell -->
+                                <div class="dropdown">
+                                    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" id="adminNotifBell">
+                                        <i class="bx bx-bell fs-4 position-relative">
+                                            {% set unread_admin = current_notifications | selectattr('is_read',
+                                            'equalto',
+                                            False) | list %}
+                                            <span
+                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white {% if unread_admin|length == 0 %}d-none{% endif %}"
+                                                id="adminNotifBadge" style="font-size: 0.60rem; padding: 0.25em 0.4em;">
+                                                {{ unread_admin|length }}
+                                            </span>
+                                        </i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 350px;">
+                                        <li class="dropdown-header border-bottom p-3 text-center fw-bold">
+                                            <span><i class="bx bx-bell me-2"></i>Notifications</span>
+                                            <span class="badge bg-primary ms-2" id="adminNotifCount">{{
+                                                unread_admin|length
+                                                }} New</span>
+                                        </li>
+                                        <li class="p-0">
+                                            <ul class="nav nav-tabs nav-fill px-3 pt-2" role="tablist">
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link active small py-2" role="tab"
+                                                        data-bs-toggle="tab"
+                                                        data-bs-target="#admin-orders-tab">Orders</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link small py-2" role="tab"
+                                                        data-bs-toggle="tab"
+                                                        data-bs-target="#admin-reviews-tab">Reviews</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link small py-2" role="tab"
+                                                        data-bs-toggle="tab"
+                                                        data-bs-target="#admin-system-tab">System</button>
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content p-0" style="max-height: 350px; overflow-y: auto;">
+                                                <div class="tab-pane fade show active" id="admin-orders-tab"
+                                                    role="tabpanel">
+                                                    <ul class="list-unstyled mb-0" id="adminNotifList">
+                                                        {% set order_notifs = current_notifications | selectattr('type',
+                                                        'equalto', 'ORDER') | list %}
+                                                        {% if order_notifs %}
+                                                        {% for notif in order_notifs %}
+                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                            <a class="dropdown-item border-bottom py-2 pe-5"
+                                                                href="{{ notif.link or '#' }}">
+                                                                <div class="d-flex align-items-start">
+                                                                    <div class="avatar me-2 flex-shrink-0">
+                                                                        <span
+                                                                            class="avatar-initial rounded bg-label-secondary">
+                                                                            <i class="bx bx-cart text-success"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <h6
+                                                                            class="mb-1 small fw-bold text-wrap text-dark">
+                                                                            {{ notif.title }}</h6>
+                                                                        <p class="mb-0 small text-muted text-wrap">{{
+                                                                            notif.message }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            <button type="button"
+                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                                data-id="{{ notif.id }}" aria-label="Close"
+                                                                style="font-size: 0.65rem; z-index: 10;"></button>
+                                                        </li>
+                                                        {% endfor %}
+                                                        {% else %}
+                                                        <li>
+                                                            <div
+                                                                class="dropdown-item text-center text-muted small py-3">
+                                                                No
+                                                                new alerts</div>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                                <div class="tab-pane fade" id="admin-reviews-tab" role="tabpanel">
+                                                    <ul class="list-unstyled mb-0" id="adminReviewNotifList">
+                                                        {% set review_notifs = current_notifications |
+                                                        selectattr('type',
+                                                        'equalto', 'REVIEW') | list %}
+                                                        {% if review_notifs %}
+                                                        {% for notif in review_notifs %}
+                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                            <a class="dropdown-item border-bottom py-2 pe-5"
+                                                                href="{{ notif.link or '#' }}">
+                                                                <div class="d-flex align-items-start">
+                                                                    <div class="avatar me-2 flex-shrink-0">
+                                                                        <span
+                                                                            class="avatar-initial rounded bg-label-secondary">
+                                                                            <i
+                                                                                class="bx bx-comment-detail text-warning"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <h6
+                                                                            class="mb-1 small fw-bold text-wrap text-dark">
+                                                                            {{ notif.title }}</h6>
+                                                                        <p class="mb-0 small text-muted text-wrap">{{
+                                                                            notif.message }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            <button type="button"
+                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                                data-id="{{ notif.id }}" aria-label="Close"
+                                                                style="font-size: 0.65rem; z-index: 10;"></button>
+                                                        </li>
+                                                        {% endfor %}
+                                                        {% else %}
+                                                        <li>
+                                                            <div
+                                                                class="dropdown-item text-center text-muted small py-3">
+                                                                No
+                                                                new reviews</div>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                                <div class="tab-pane fade" id="admin-system-tab" role="tabpanel">
+                                                    <ul class="list-unstyled mb-0" id="adminSystemNotifList">
+                                                        {% set admin_sys_notifs = current_notifications |
+                                                        selectattr('type',
+                                                        'equalto', 'SYSTEM') | list %}
+                                                        {% if admin_sys_notifs %}
+                                                        {% for notif in admin_sys_notifs %}
+                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                            <a class="dropdown-item border-bottom py-2 pe-5"
+                                                                href="{{ notif.link or '#' }}">
+                                                                <div class="d-flex align-items-start">
+                                                                    <div class="avatar me-2 flex-shrink-0">
+                                                                        <span
+                                                                            class="avatar-initial rounded bg-label-secondary">
+                                                                            <i class="bx bx-broadcast text-danger"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <h6
+                                                                            class="mb-1 small fw-bold text-wrap text-dark">
+                                                                            {{ notif.title }}</h6>
+                                                                        <p class="mb-0 small text-muted text-wrap">{{
+                                                                            notif.message }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            <button type="button"
+                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                                data-id="{{ notif.id }}" aria-label="Close"
+                                                                style="font-size: 0.65rem; z-index: 10;"></button>
+                                                        </li>
+                                                        {% endfor %}
+                                                        {% else %}
+                                                        <li>
+                                                            <div
+                                                                class="dropdown-item text-center text-muted small py-3">
+                                                                No
+                                                                new system alerts</div>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4 py-2 shadow-sm"
+                                role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="bx bx-user me-2"></i>
+                                    <div class="small fw-bold">Welcome, {{ session.get('username', 'Customer') }}</div>
+                                </div>
+                                <!-- Customer Notification Bell -->
+                                <div class="dropdown">
+                                    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" id="custNotifBell">
+                                        <i class="bx bx-bell fs-4 text-primary position-relative">
+                                            {% set unread_cust = current_notifications | selectattr('is_read',
+                                            'equalto',
+                                            False) | list %}
+                                            <span
+                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white {% if unread_cust|length == 0 %}d-none{% endif %}"
+                                                id="custNotifBadge" style="font-size: 0.60rem; padding: 0.25em 0.4em;">
+                                                {{ unread_cust|length }}
+                                            </span>
+                                        </i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 350px;">
+                                        <li class="dropdown-header border-bottom p-3 text-center fw-bold">
+                                            <span><i class="bx bx-bell text-primary me-2"></i>Your Notifications</span>
+                                        </li>
+                                        <li class="p-0">
+                                            <ul class="nav nav-tabs nav-fill px-3 pt-2" role="tablist">
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link active small py-2" role="tab"
+                                                        data-bs-toggle="tab"
+                                                        data-bs-target="#cust-orders-tab">Orders</button>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <button type="button" class="nav-link small py-2" role="tab"
+                                                        data-bs-toggle="tab"
+                                                        data-bs-target="#cust-system-tab">System</button>
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content p-0" style="max-height: 350px; overflow-y: auto;">
+                                                <div class="tab-pane fade show active" id="cust-orders-tab"
+                                                    role="tabpanel">
+                                                    <ul class="list-unstyled mb-0" id="custNotifList">
+                                                        {% set order_notifs = current_notifications | selectattr('type',
+                                                        'in', ['ORDER_STATUS', 'PAYMENT_STATUS']) | list %}
+                                                        {% if order_notifs %}
+                                                        {% for notif in order_notifs %}
+                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                            <a class="dropdown-item border-bottom py-2 pe-5"
+                                                                href="{{ notif.link or '#' }}">
+                                                                <div class="d-flex align-items-start">
+                                                                    <i
+                                                                        class="bx fs-4 me-2 mt-1 {% if notif.type == 'ORDER_STATUS' %}bx-package text-primary{% else %}bx-credit-card text-success{% endif %}"></i>
+                                                                    <div class="flex-grow-1">
+                                                                        <h6
+                                                                            class="mb-1 small fw-bold text-wrap text-dark">
+                                                                            {{ notif.title }}</h6>
+                                                                        <p class="mb-0 small text-muted text-wrap">{{
+                                                                            notif.message }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            <button type="button"
+                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                                data-id="{{ notif.id }}" aria-label="Close"
+                                                                style="font-size: 0.65rem; z-index: 10;"></button>
+                                                        </li>
+                                                        {% endfor %}
+                                                        {% else %}
+                                                        <li>
+                                                            <div
+                                                                class="dropdown-item text-center text-muted small py-3">
+                                                                No
+                                                                recent orders</div>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                                <div class="tab-pane fade" id="cust-system-tab" role="tabpanel">
+                                                    <ul class="list-unstyled mb-0" id="custSystemNotifList">
+                                                        {% set sys_notifs = current_notifications | rejectattr('type',
+                                                        'in',
+                                                        ['ORDER_STATUS', 'PAYMENT_STATUS']) | list %}
+                                                        {% if sys_notifs %}
+                                                        {% for notif in sys_notifs %}
+                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                            <a class="dropdown-item border-bottom py-2 pe-5"
+                                                                href="{{ notif.link or '#' }}">
+                                                                <div class="d-flex align-items-start">
+                                                                    <i
+                                                                        class="bx fs-4 me-2 mt-1 {% if notif.type == 'SALE' %}bx-broadcast text-danger{% else %}bx-bell text-secondary{% endif %}"></i>
+                                                                    <div class="flex-grow-1">
+                                                                        <h6
+                                                                            class="mb-1 small fw-bold text-wrap text-dark">
+                                                                            {{ notif.title }}</h6>
+                                                                        <p class="mb-0 small text-muted text-wrap">{{
+                                                                            notif.message }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            <button type="button"
+                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                                data-id="{{ notif.id }}" aria-label="Close"
+                                                                style="font-size: 0.65rem; z-index: 10;"></button>
+                                                        </li>
+                                                        {% endfor %}
+                                                        {% else %}
+                                                        <li>
+                                                            <div
+                                                                class="dropdown-item text-center text-muted small py-3">
+                                                                No
+                                                                new system alerts</div>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show"
+                                role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                            {% endwith %}
+
+                            {% block content %}{% endblock %}
+
+                        </div>
+
+                        <footer class="content-footer footer bg-footer-theme text-center py-3">
+                            <div class="container-xxl">
+                                <div class="mb-1">
+                                    <a href="{{ url_for('system.about') }}"
+                                        class="text-muted text-decoration-none small me-3">About Us</a>
+                                    <a href="{{ url_for('system.support') }}"
+                                        class="text-muted text-decoration-none small">Support</a>
+                                </div>
+                                &copy; 2026 <strong>SnapShop</strong> | All Rights Reserved
+                            </div>
+                        </footer>
+                    </div>
+                </div>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='assets/vendor/libs/jquery/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/libs/popper/popper.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/js/bootstrap.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script
+        src="{{ url_for('static', filename='assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/js/menu.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/theme-default.css') }}"
+        class="template-customizer-theme-css" />
+
+    {% block extra_scripts %}{% endblock %}
+
+    <!-- Customer Drawer JS -->
+    <script>
+        function openCustDrawer() {
+            document.getElementById('custDrawer').classList.add('open');
+            document.getElementById('custDrawerOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCustDrawer() {
+            document.getElementById('custDrawer').classList.remove('open');
+            document.getElementById('custDrawerOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    </script>
+
+</body>
+
+</html>

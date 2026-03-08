@@ -1,0 +1,42 @@
+{% extends "base_auth.html" %}
+{% block title %}Verify Your Email{% endblock %}
+
+{% block content %}
+<div class="card-body px-5 py-5 text-center">
+
+    <div class="mb-4">
+        <i class="bx bx-envelope-open text-primary" style="font-size: 4rem;"></i>
+    </div>
+
+    <h4 class="mb-3 fw-bold text-dark">Check Your Inbox</h4>
+
+    <p class="mb-4 text-muted">
+        Account is created. Please verify the mail from your mailbox.
+        We've sent a verification link to<br>
+        <strong>{{ email if email else 'your email address' }}</strong>.
+    </p>
+
+    <div class="d-grid gap-2 mb-4">
+        <a href="{{ url_for('login.login') }}" class="btn btn-outline-secondary">
+            Go to Login
+        </a>
+    </div>
+
+    <div class="mt-4 pt-3 border-top">
+        <p class="text-muted small mb-2">Didn't receive the email?</p>
+        <form action="{{ url_for('register_forget.resend_verification') }}" method="POST">
+            {% if email %}
+            <input type="hidden" name="email" value="{{ email }}">
+            {% else %}
+            <div class="input-group input-group-sm mb-2">
+                <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-sm btn-label-primary w-100">
+                <i class="bx bx-refresh me-1"></i> Resend Verification Email
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

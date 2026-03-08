@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block page_title %}Assign Admin Duties{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card">
+        <div class="card-header border-bottom bg-light">
+            <h5 class="mb-0"><i class="bx bx-task me-2"></i>Granular Role Assignment</h5>
+            <p class="text-muted mb-0">Use the <strong>"Hide Page"</strong> switch to block entire sections from the
+                sidebar and access, or select specific columns below.</p>
+        </div>
+        <div class="card-body pt-4">
+
+            <form action="{{ url_for('admin_staff.manage_roles') }}" method="POST" id="permForm">
+                <div class="mb-5">
+                    <label class="form-label fw-bold text-primary">1. Select Admin Account</label>
+                    <div class="d-flex gap-2">
+                        <select name="admin_id" id="admin_select"
+                            class="form-select form-select-lg border-primary shadow-none" required>
+                            <option value="">-- Click to see all Admin Accounts --</option>
+                            {% for a in admins %}
+                            <option value="{{ a.customer_id }}">{{ a.name }} | {{ a.email }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mt-2 d-flex justify-content-end">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="deleteBtn" disabled
+                            onclick="confirmDelete()">
+                            <i class="bx bx-trash-alt me-1"></i> Delete Selected Admin
+                        </button>
+                    </div>
+                </div>
+
+                <label class="form-label fw-bold text-primary mb-3">2. Page & Functionality Restrictions</label>
+
+                <div class="row gy-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-primary">
+                            <h6
+                                class="fw-bold border-bottom pb-2 text-primary d-flex justify-content-between align-items-center">
+                                <span><i class="bx bx-grid-alt me-2"></i>Dashboard Page</span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hide_dashboard" id="h_dash">
+                                    <label class="form-check-label small text-dark" for="h_dash">Hide Page</label>
+                                </div>
+                            </h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                            name="dash_revenue" id="d4"><label class="form-check-label" for="d4">Revenue
+                                            Card</label></div>
+                                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                            name="dash_profit" id="d5"><label class="form-check-label" for="d5">Profit
+                                            Card</label></div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                            name="dash_orders" id="d3"><label class="form-check-label" for="d3">Orders
+                                            Chart</label></div>
+                                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                            name="dash_inventory" id="d6"><label class="form-check-label" for="d6">Stock
+                                            Alerts</label></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-info">
+                            <h6
+                                class="fw-bold border-bottom pb-2 text-info d-flex justify-content-between align-items-center">
+                                <span><i class="bx bx-user me-2"></i>Customer Page</span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hide_customer_page"
+                                        id="h_cust">
+                                    <label class="form-check-label small text-dark" for="h_cust">Hide Page</label>
+                                </div>
+                            </h6>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                    name="cust_mobile" id="c1"><label class="form-check-label" for="c1">Hide Mobile
+                                    Numbers</label></div>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                    name="cust_email" id="c2"><label class="form-check-label" for="c2">Hide Email
+                                    Addresses</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="cust_action"
+                                    id="c4"><label class="form-check-label text-danger" for="c4">Disable Actions</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-warning">
+                            <h6
+                                class="fw-bold border-bottom pb-2 text-warning d-flex justify-content-between align-items-center">
+                                <span><i class="bx bx-package me-2"></i>Product Page</span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hide_product_page"
+                                        id="h_prod">
+                                    <label class="form-check-label small text-dark" for="h_prod">Hide Page</label>
+                                </div>
+                            </h6>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                    name="prod_cost" id="p1"><label class="form-check-label" for="p1">Hide Cost
+                                    Price</label></div>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                    name="prod_stock" id="p3"><label class="form-check-label" for="p3">Hide Stock
+                                    Levels</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="prod_add"
+                                    id="p4"><label class="form-check-label" for="p4">Disable "Add New"</label></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-success">
+                            <h6 class="fw-bold border-bottom pb-2 text-success"><i
+                                    class="bx bx-category me-2"></i>Categories / Address</h6>
+                            <div class="form-check form-switch mb-2 d-flex justify-content-between border-bottom pb-1">
+                                <label class="form-check-label fw-bold" for="h_cat">Hide Entire Category Page</label>
+                                <input class="form-check-input" type="checkbox" name="hide_category_page" id="h_cat">
+                            </div>
+                            <div class="form-check form-switch mb-3 d-flex justify-content-between border-bottom pb-1">
+                                <label class="form-check-label fw-bold" for="h_addr">Hide Entire Address Page</label>
+                                <input class="form-check-input" type="checkbox" name="hide_address_page" id="h_addr">
+                            </div>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox"
+                                    name="cat_hierarchy" id="cat1"><label class="form-check-label" for="cat1">Hide
+                                    Hierarchy</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat_action"
+                                    id="cat3"><label class="form-check-label text-danger" for="cat3">Disable
+                                    Actions</label></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-secondary">
+                            <h6
+                                class="fw-bold border-bottom pb-2 text-secondary d-flex justify-content-between align-items-center">
+                                <span><i class="bx bx-comment-detail me-2"></i>Reviews Page</span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hide_reviews_page" id="h_rev">
+                                    <label class="form-check-label small text-dark" for="h_rev">Hide Page</label>
+                                </div>
+                            </h6>
+                            <p class="text-muted small mt-2 mb-0">Hides the Product Feedback dashboard from the sidebar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-primary">
+                            <h6
+                                class="fw-bold border-bottom pb-2 text-primary d-flex justify-content-between align-items-center">
+                                <span><i class="bx bx-purchase-tag-alt me-2"></i>Vouchers Page</span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hide_voucher_page"
+                                        id="h_vouch">
+                                    <label class="form-check-label small text-dark" for="h_vouch">Hide Page</label>
+                                </div>
+                            </h6>
+                            <p class="text-muted small mt-2 mb-0">Hides the Coupon & Voucher dashboard from the sidebar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-none border p-3 h-100 border-warning">
+                            <h6
+                                class="fw-bold border-bottom pb-2 text-warning d-flex justify-content-between align-items-center">
+                                <span><i class="bx bx-carousel me-2"></i>Hero Banners</span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hide_banner_page" id="h_ban">
+                                    <label class="form-check-label small text-dark" for="h_ban">Hide Page</label>
+                                </div>
+                            </h6>
+                            <p class="text-muted small mt-2 mb-0">Hides the Hero Banners dashboard from the sidebar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="card shadow-none border p-3 border-danger">
+                            <h6 class="fw-bold border-bottom pb-2 text-danger"><i
+                                    class="bx bx-credit-card me-2"></i>Sales & Finance Access</h6>
+                            <div class="row">
+                                <div class="col-md-6 border-end">
+                                    <div
+                                        class="form-check form-switch mb-3 d-flex justify-content-between pe-3 border-bottom pb-1">
+                                        <label class="form-check-label fw-bold" for="h_order">HIDE ENTIRE ORDERS
+                                            PAGE</label>
+                                        <input class="form-check-input" type="checkbox" name="hide_order_page"
+                                            id="h_order">
+                                    </div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox"
+                                            name="order_actions" id="o2"><label class="form-check-label"
+                                            for="o2">Disable Order Processing</label></div>
+                                </div>
+                                <div class="col-md-6 ps-3">
+                                    <div
+                                        class="form-check form-switch mb-3 d-flex justify-content-between border-bottom pb-1">
+                                        <label class="form-check-label fw-bold" for="h_pay">HIDE ENTIRE PAYMENTS
+                                            PAGE</label>
+                                        <input class="form-check-input" type="checkbox" name="hide_payment_page"
+                                            id="h_pay">
+                                    </div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox"
+                                            name="pay_amount" id="pay2"><label class="form-check-label" for="pay2">Hide
+                                            Transaction Amounts</label></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 pt-3 border-top d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                        <i class="bx bx-check-shield me-1"></i> Save All Permissions
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display:none;"></form>
+
+<script src="{{ url_for('static', filename='js/manage_roles_actions.js') }}"></script>
+{% endblock %}

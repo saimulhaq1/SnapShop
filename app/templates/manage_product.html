@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ 'Edit' if product.pro_id else 'Add' }} Product{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate
+        action="{{ url_for('manage_product.manage_product', id=product.pro_id if product.pro_id else None) }}">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold mb-0">
+                <span class="text-muted fw-light">Products /</span> {{ 'Edit' if product.pro_id else 'Add' }} Product
+            </h4>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('product.products') }}" class="btn btn-outline-secondary">Discard</a>
+                <button type="submit" class="btn btn-primary px-4">Save Product</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-8 col-lg-7">
+                <div class="card mb-4">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-title mb-0">General Information</h5>
+                    </div>
+                    <div class="card-body pt-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Product Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Wireless Headphones"
+                                value="{{ request.form.get('name', product.name or '') }}" required />
+                        </div>
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label class="form-label fw-bold">Product Code (SKU)</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="bx bx-hash"></i></span>
+                                    <input type="text" name="product_code" class="form-control"
+                                        value="{{ request.form.get('product_code', product.product_code or '') }}"
+                                        placeholder="SKU-1001" required />
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label class="form-label fw-bold">Barcode (EAN/UPC)</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="bx bx-barcode"></i></span>
+                                    <input type="text" name="barcode" class="form-control"
+                                        value="{{ request.form.get('barcode', product.barcode or '') }}"
+                                        placeholder="Scan item barcode" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="5"
+                                placeholder="Detailed product specifications...">{{ request.form.get('description', product.description or '') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Pricing & Inventory</h5>
+                        <span class="badge bg-label-success">Clean GST Applied</span>
+                    </div>
+                    <div class="card-body pt-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Buy Price (Rs.)</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text">Rs.</span>
+                                    <input type="number" step="0.01" id="buy_price" name="buy_price"
+                                        class="form-control calc-trigger"
+                                        value="{{ request.form.get('buy_price', product.buy_price or 0) }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Base Sale Price (Excl. Tax)</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text">Rs.</span>
+                                    <input type="number" step="0.01" id="sale_price" name="sale_price"
+                                        class="form-control calc-trigger"
+                                        value="{{ request.form.get('sale_price', product.sale_price or 0) }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-primary">Tax Rate</label>
+                                <select name="tax_id" id="tax_id" class="form-select border-primary calc-trigger"
+                                    required>
+                                    <option value="" data-rate="0">No Tax (0%)</option>
+                                    {% for t in taxes %}
+                                    <option value="{{ t.tax_id }}" data-rate="{{ t.rate }}" {% if
+                                        request.form.get('tax_id')|int==t.tax_id or (not request.form.get('tax_id') and
+                                        product.tax_id==t.tax_id) %}selected{% endif %}>
+                                        {{ t.tax_name }} ({{ "%.1f"|format(t.rate) }}%)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Discount (%)</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="bx bx-purchase-tag-alt"></i></span>
+                                    <input type="number" step="0.1" id="discount" name="discount"
+                                        class="form-control calc-trigger"
+                                        value="{{ request.form.get('discount', product.discount or 0) }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="alert alert-secondary border-0 p-3 mb-0" style="background-color: #f8f9fa;">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-bold text-muted text-uppercase">Tax Amount:</small>
+                                        <span id="tax_preview" class="fw-bold text-danger">Rs. 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-bold text-muted text-uppercase">Est. Profit:</small>
+                                        <span id="profit_display" class="fw-bold text-success">Rs. 0.00</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="fw-bold text-muted text-uppercase">Final Customer Price:</small>
+                                        <span id="final_display" class="fw-bold text-primary h5 mb-0">Rs. 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="bx bx-truck me-2"></i>Shipping Details</h5>
+                        <span class="badge bg-label-info">Delivery Policy</span>
+                    </div>
+                    <div class="card-body pt-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3 p-3 bg-light rounded border">
+                            <div>
+                                <h6 class="fw-bold mb-1">Free Delivery</h6>
+                                <small class="text-muted">Toggle off to set a custom delivery charge for this
+                                    product.</small>
+                            </div>
+                            <div class="form-check form-switch ms-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="freeDeliveryToggle"
+                                    style="width: 3rem; height: 1.5rem; cursor: pointer;" {% if not product.pro_id or
+                                    product.is_free_delivery %}checked{% endif %}>
+                                <input type="hidden" name="is_free_delivery" id="is_free_delivery_hidden"
+                                    value="{{ '0' if product.pro_id and not product.is_free_delivery else '1' }}">
+                            </div>
+                        </div>
+
+                        <div id="deliveryChargeSection"
+                            class="{% if product.pro_id and not product.is_free_delivery %}{% else %}d-none{% endif %}">
+                            <label class="form-label fw-bold">Delivery Charge (Rs.)</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-package"></i></span>
+                                <input type="number" step="0.01" min="0" name="delivery_charge" id="delivery_charge"
+                                    class="form-control"
+                                    value="{{ request.form.get('delivery_charge', product.delivery_charge or 0) }}"
+                                    placeholder="e.g. 200">
+                                <span class="input-group-text">Rs.</span>
+                            </div>
+                            <small class="text-muted mt-1 d-block">This charge will be added to the customer's order
+                                total.</small>
+                        </div>
+
+                        <div id="freeDeliveryBadge"
+                            class="{% if product.pro_id and not product.is_free_delivery %}d-none{% endif %}">
+                            <span class="badge bg-label-success p-2" style="font-size: 0.85rem;">
+                                <i class="bx bx-check-circle me-1"></i> FREE Delivery Enabled
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+                <div class="card mb-4">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-title mb-0">Status & Media</h5>
+                    </div>
+                    <div class="card-body pt-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Inventory Status</label>
+                            <select name="status" class="form-select fw-bold text-primary">
+                                {% for s in ProductStatus %}
+                                <option value="{{ s.name }}" {% if request.form.get('status')==s.name or (not
+                                    request.form.get('status') and product.status and product.status.name==s.name)
+                                    %}selected{% endif %}>
+                                    {{ s.name.replace('_', ' ').title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Brand</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-purchase-tag"></i></span>
+                                <input type="text" class="form-control" name="brand_name" list="brand_list"
+                                    placeholder="Search or Create Brand..."
+                                    value="{{ request.form.get('brand_name', product.brand.brand_name if product.brand else '') }}"
+                                    autocomplete="off">
+                                <datalist id="brand_list">
+                                    {% for brand in brands %}
+                                    <option value="{{ brand.brand_name }}"></option>
+                                    {% endfor %}
+                                </datalist>
+                            </div>
+                            <small class="text-muted">Type a new name to create a brand instantly.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category</label>
+                            <select name="cat_id" class="form-select" required>
+                                <option value="">Choose category...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.cat_id }}" {% if request.form.get('cat_id')|int==cat.cat_id or
+                                    (not request.form.get('cat_id') and product.cat_id==cat.cat_id) %}selected{% endif
+                                    %}>
+                                    {{ cat.cat_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Main Product Image</label>
+                            <input type="file" name="image_file" id="image_file" class="d-none" accept="image/*">
+                            <div class="d-flex flex-column gap-2 mb-3">
+                                <button type="button" class="btn btn-outline-primary w-100"
+                                    onclick="document.getElementById('image_file').click()">
+                                    <i class="bx bx-image-add me-1"></i> Choose Primary Thumbnail
+                                </button>
+                                <span id="file-name-display" class="text-muted small text-center italic">No file
+                                    chosen</span>
+                            </div>
+                            <div id="preview-container"
+                                class="p-2 border rounded bg-light text-center mb-3 {% if not product.image_url %}d-none{% endif %}">
+                                <small class="d-block mb-2 fw-bold text-muted">Primary Preview</small>
+                                <img src="{{ url_for('static', filename='assets/img/products/' + (product.image_url or '')) }}"
+                                    id="preview-img" style="max-width: 100%; height: 120px;" class="rounded shadow-sm">
+                            </div>
+
+                            <label class="form-label fw-bold">Gallery Images</label>
+                            <input type="file" name="additional_images" id="additional_images" class="form-control"
+                                accept="image/*" multiple>
+                            <small class="text-muted mt-1 d-block">Select multiple files to add supporting pictures.
+                                Newly added or existing images can be removed.</small>
+
+                            <!-- PREVIEW CONTAINER AND EXISTING IMAGES -->
+                            <div id="gallery-preview-container" class="d-flex flex-wrap gap-3 mt-3">
+                                {% if product.additional_images %}
+                                {% for img in product.additional_images %}
+                                <div class="position-relative border rounded bg-white gallery-item-existing"
+                                    id="existing-img-{{ img.id }}" style="width: 80px; height: 80px;">
+                                    <img src="{{ url_for('static', filename='assets/img/products/gallery/' + img.image_url) }}"
+                                        class="w-100 h-100" style="object-fit: cover; border-radius: 4px;">
+                                    <button type="button"
+                                        class="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle rounded-circle p-0 d-flex align-items-center justify-content-center shadow"
+                                        onclick="removeExistingImage('{{ img.id }}')"
+                                        style="width: 22px; height: 22px;">
+                                        <i class="bx bx-x" style="font-size: 14px;"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+                            <!-- Hidden input to store IDs of existing images that the admin wants to delete -->
+                            <input type="hidden" name="deleted_existing_images" id="deleted_existing_images" value="">
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Stock Quantity</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-package"></i></span>
+                                <input type="number" name="stock" class="form-control"
+                                    value="{{ request.form.get('stock', product.stock or 0) }}" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/manage_product_actions.js') }}"></script>
+{% endblock %}

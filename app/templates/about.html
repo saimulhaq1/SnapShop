@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}SnapShop - About Us{% endblock %}
+{% block content %}
+<div class="container-xxl mt-5 pt-3 pb-5">
+    <div class="row align-items-center">
+        <!-- Text Content -->
+        <div class="col-lg-6 mb-4 mb-lg-0 order-2 order-lg-1 pe-lg-5">
+            <h1 class="display-5 fw-bold text-dark mb-4">About <span class="text-primary">SnapShop</span></h1>
+            <p class="lead text-muted mb-4">
+                Redefining the digital shopping experience through cutting-edge architecture, seamless user interfaces,
+                and incredibly fast performance.
+                SnapShop isn't just a store; it's a statement of engineering excellence.
+            </p>
+            <div class="mb-5">
+                <h4 class="fw-bold mb-3 border-start border-primary border-4 ps-3">Meet the Architect</h4>
+                <p class="text-muted">
+                    This platform was designed, engineered, and brought to life by <strong>M. Saim Ulhaq</strong>.
+                </p>
+            </div>
+            <div class="row g-4 mb-4">
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded-circle bg-label-primary"><i
+                                    class="bx bxl-python fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Python & Flask</h6>
+                            <small class="text-muted">Backend Mastery</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded-circle bg-label-success"><i
+                                    class="bx bx-brain fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Machine Learning</h6>
+                            <small class="text-muted">Data Intelligence</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded-circle bg-label-info"><i
+                                    class="bx bx-network-chart fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Deep Learning</h6>
+                            <small class="text-muted">Neural Networks</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded-circle bg-label-warning"><i
+                                    class="bx bx-store-alt fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">E-Commerce</h6>
+                            <small class="text-muted">Architecture</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image / Graphics -->
+        <div class="col-lg-6 order-1 order-lg-2 text-center mb-5 mb-lg-0">
+            <div class="position-relative">
+                <!-- Abstract coding/tech graphic representation -->
+                <div class="p-5 rounded-4 shadow-lg bg-white position-relative zindex-1 border">
+                    <i class="bx bx-code-block text-primary" style="font-size: 8rem; opacity: 0.8;"></i>
+                    <h3 class="mt-4 fw-bold text-dark">Built for Scale</h3>
+                    <p class="text-muted small px-4 mb-0">Powered by Flask, SQLAlchemy, WebSockets and Bootstrap 5.</p>
+                </div>
+                <!-- Decorative background blobs -->
+                <div class="position-absolute top-0 start-0 translate-middle rounded-circle bg-primary opacity-25"
+                    style="width: 250px; height: 250px; filter: blur(50px); z-index: 0;"></div>
+                <div class="position-absolute bottom-0 end-0 translate-middle-x rounded-circle bg-info opacity-25"
+                    style="width: 200px; height: 200px; filter: blur(40px); z-index: 0;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

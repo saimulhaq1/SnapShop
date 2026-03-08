@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+{% block page_title %}Product Management{% endblock %}
+
+{% block content %}
+
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    {% if session.get('role') == 'ADMIN' %}
+    {# --- ADMIN HEADER & ADVANCED SEARCH --- #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Global Inventory Management</h4>
+        <a href="{{ url_for('manage_product.manage_product') }}" class="btn btn-primary shadow-sm">
+            <i class="bx bx-plus me-1"></i> Add New Product
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('product.products') }}" id="searchForm"
+                class="row g-3 align-items-center">
+                {# 1. Search By Field #}
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small">Search By</label>
+                    <select name="search_by" id="search_by" class="form-select" onchange="updateSearchUI()">
+                        <option value="name" {% if request.args.get('search_by')=='name' %}selected{% endif %}>Product
+                            Name</option>
+                        <option value="code" {% if request.args.get('search_by')=='code' %}selected{% endif %}>Article
+                            Number</option>
+                        <option value="brand" {% if request.args.get('search_by')=='brand' %}selected{% endif %}>Brand
+                        </option>
+                        <option value="price" {% if request.args.get('search_by')=='price' %}selected{% endif %}>Price
+                        </option>
+                        {% if session.get('role') == 'ADMIN' %}
+                        <option value="stock" {% if request.args.get('search_by')=='stock' %}selected{% endif %}>Stock
+                            Level</option>
+                        <option value="barcode" {% if request.args.get('search_by')=='barcode' %}selected{% endif %}>
+                            Barcode</option>
+                        {% endif %}
+                        <optgroup label="Categories">
+                            <option value="name">-- All Categories (Reset) --</option>
+                            {% for cat in parent_categories %}
+                            <option value="cat_{{ cat.cat_id }}" {% if request.args.get('search_by')=='cat_' ~
+                                cat.cat_id %}selected{% endif %}>Category: {{ cat.cat_name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+
+                {# 2. Operator (Hidden for text fields) #}
+                <div class="col-md-2" id="operator_div" style="display:none;">
+                    <label class="form-label fw-bold small">Operator</label>
+                    <select name="operator" class="form-select">
+                        <option value="=" {% if request.args.get('operator')=='=' %}selected{% endif %}>Equal to (=)
+                        </option>
+                        <option value=">" {% if request.args.get('operator')=='>' %}selected{% endif %}>Greater than
+                            (&gt;)</option>
+                        <option value="<" {% if request.args.get('operator')=='<' %}selected{% endif %}>Less than (&lt;)
+                        </option>
+                    </select>
+                </div>
+
+                {# 3. Search Value #}
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Value</label>
+                    <input type="text" name="q" id="search_value" class="form-control" placeholder="Type to search..."
+                        value="{{ request.args.get('q', '') }}">
+                </div>
+
+                {# 4. Status Filter #}
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small">Status</label>
+                    <select name="status_filter" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="ACTIVE" {% if request.args.get('status_filter')=='ACTIVE' %}selected{% endif %}>
+                            Active</option>
+                        <option value="INACTIVE" {% if request.args.get('status_filter')=='INACTIVE' %}selected{% endif
+                            %}>Inactive</option>
+                        <option value="OUT_OF_STOCK" {% if request.args.get('status_filter')=='OUT_OF_STOCK'
+                            %}selected{% endif %}>Out of Stock</option>
+                    </select>
+                </div>
+
+                {# 5. Actions #}
+                <div class="col-md-3 d-flex gap-2 align-items-end mt-4">
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="bx bx-search-alt me-1"></i>
+                        Search</button>
+                    <a href="{{ url_for('product.products') }}" class="btn btn-outline-secondary"><i
+                            class="bx bx-reset me-1"></i> Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    {# --- CUSTOMER AMAZON-STYLE HEADER --- #}
+    <div id="mainHeader" class="bg-white px-3 py-3 shadow-sm border-bottom z-3 transition-all"
+        style="width: 100%; top: 0;">
+        <div class="d-flex flex-wrap flex-md-nowrap justify-content-between align-items-center gap-3 w-100">
+
+            <!-- Left: Hamburger & Store Title -->
+            <div class="d-flex align-items-center me-2">
+                <h5 class="fw-bold mb-0 text-nowrap d-none d-lg-block">
+                    <a href="{{ url_for('product.products') }}" class="text-dark text-decoration-none">
+                        <span class="text-primary fw-bolder">SnapShop</span>
+                    </a>
+                    <span class="text-muted fw-light ms-1">/</span> {{ current_category_name or 'All Products' }}
+                </h5>
+            </div>
+
+            <!-- Center: Amazon-style Search Bar relative container -->
+            <div class="position-relative flex-grow-1 mx-md-3" style="max-width: 800px;">
+                <form method="GET" action="{{ url_for('product.products') }}" class="d-flex w-100"
+                    style="border-radius: 6px; overflow: hidden; border: 2px solid #febd69;">
+                    <!-- Category / Search By Dropdown -->
+                    <select name="search_by" id="search_by"
+                        class="form-select border-0 bg-light text-dark position-relative"
+                        style="width: auto; max-width: 155px; border-radius: 4px 0 0 4px; border-right: 1px solid #ccc !important; font-size: 0.9rem; cursor: pointer;">
+                        <option value="name" {% if request.args.get('search_by')=='name' %}selected{% endif %}>Product
+                            Name
+                        </option>
+                        <option value="code" {% if request.args.get('search_by')=='code' %}selected{% endif %}>Article
+                            Number
+                        </option>
+                        <option value="brand" {% if request.args.get('search_by')=='brand' %}selected{% endif %}>Brand
+                        </option>
+                        <option value="price" {% if request.args.get('search_by')=='price' %}selected{% endif %}>Price
+                        </option>
+                        <optgroup label="Categories">
+                            <option value="name">-- All Categories --</option>
+                            {% for cat in parent_categories %}
+                            <option value="cat_{{ cat.cat_id }}" {% if request.args.get('search_by')=='cat_' ~
+                                cat.cat_id %}selected{% endif %}>{{ cat.cat_name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+
+                    <!-- Conditional Operator Dropdown -->
+                    <div id="operator_div" style="display:none; border-right: 1px solid #ccc !important;">
+                        <select name="operator" class="form-select border-0 bg-light text-dark"
+                            style="border-radius: 0; font-size: 0.9rem;">
+                            <option value="=" {% if request.args.get('operator')=='=' %}selected{% endif %}>=</option>
+                            <option value=">" {% if request.args.get('operator')=='>' %}selected{% endif %}>&gt;
+                            </option>
+                            <option value="<" {% if request.args.get('operator')=='<' %}selected{% endif %}>&lt;
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Center Input -->
+                    <input type="text" name="q" id="search_value" class="form-control border-0 px-3 flex-grow-1"
+                        placeholder="Search products..." value="{{ request.args.get('q', '') }}"
+                        style="border-radius: 0; box-shadow: none;">
+
+                    <!-- Orange Search Button -->
+                    <button type="submit" class="btn border-0 px-4"
+                        style="background-color: #febd69; color: #111; border-radius: 0 4px 4px 0;">
+                        <i class="bx bx-search-alt" style="font-size: 22px;"></i>
+                    </button>
+                </form>
+
+                <!-- AJAX Search Results Dropdown -->
+                <div id="searchResults"
+                    class="position-absolute w-100 bg-white shadow-lg rounded border mt-1 d-none z-3"
+                    style="max-height: 400px; overflow-y: auto;">
+                    <div id="searchResultsList" class="list-group list-group-flush">
+                        <!-- Results populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Header Icons -->
+            <div class="d-flex gap-4 align-items-center justify-content-end text-nowrap ms-2">
+                {% if session.get('user_id') %}
+                <!-- Authenticated Profile Dropdown -->
+                <div class="dropdown">
+                    <a href="#"
+                        class="text-dark d-flex flex-column align-items-center text-decoration-none dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-expanded="false" style="line-height: 1;">
+                        <i class="bx bx-user" style="font-size: 26px;"></i>
+                        <small class="fw-bold mt-1" style="font-size: 11px;">You</small>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li>
+                            <h6 class="dropdown-header text-dark">Hello, {{ session.get('username', 'Customer') }}</h6>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile.profile_settings') }}"><i
+                                    class="bx bx-user-circle me-2 text-primary"></i> Your Account</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('order.order_list') }}"><i
+                                    class="bx bx-box me-2 text-info"></i> Your Orders</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('login.logout') }}"><i
+                                    class="bx bx-power-off me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <!-- Guest Login Icon -->
+                <a href="{{ url_for('login.login') }}"
+                    class="text-dark d-flex flex-column align-items-center text-decoration-none" style="line-height: 1;"
+                    title="Sign in">
+                    <i class="bx bx-user" style="font-size: 26px;"></i>
+                    <small class="fw-bold mt-1" style="font-size: 11px;">Sign in</small>
+                </a>
+                {% endif %}
+
+                <!-- Cart Icon -->
+                <a href="{{ url_for('cart.cart_view') }}"
+                    class="text-dark d-flex flex-column align-items-center text-decoration-none position-relative"
+                    style="line-height: 1;" title="Cart">
+                    <i class="bx bx-cart" style="font-size: 26px;"></i>
+                    <small class="fw-bold mt-1" style="font-size: 11px;">Cart</small>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spacer to push content down below sticky header -->
+    <div id="headerSpacer" style="height: 0px;"></div>
+
+    <div class="container-xxl mt-4">
+        {% endif %}
+
+
+        {% if session.get('role') == 'ADMIN' %}
+        <div class="card shadow-none border">
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th>Product Details</th>
+                            <th>Brand</th>
+                            <th>Art Code</th>
+                            <th>Barcode</th>
+                            <th class="text-end">Cost</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end text-danger">Tax Amt</th>
+                            <th class="text-center">Stock</th>
+                            <th>Status</th>
+                            <th>History</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in products %}
+                        {% set sale_val = p.sale_price|float %}
+                        {% set p_disc = p.discount|float if p.discount else 0.0 %}
+                        {% set c_disc = p.category.discount|float if p.category and p.category.discount else 0.0 %}
+                        {% set total_disc = p_disc + c_disc %}
+                        {% set discounted_price = sale_val * (1.0 - (total_disc / 100.0)) %}
+
+                        <tr>
+                            <td class="text-muted">{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                                        class="rounded me-3 shadow-sm"
+                                        style="width: 45px; height: 45px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ p.name }}</div>
+                                        <div class="small text-muted">
+                                            {% if p.category %}
+                                            {% if p.category.parent_node %}
+                                            <a href="{{ url_for('product.products', category_id=p.category.parent_node.cat_id) }}"
+                                                class="text-secondary text-decoration-none hover-primary">{{
+                                                p.category.parent_node.cat_name }}</a>
+                                            <span class="mx-1">&gt;</span>
+                                            {% endif %}
+                                            <a href="{{ url_for('product.products', category_id=p.category.cat_id) }}"
+                                                class="text-primary text-decoration-none fw-bold hover-primary">{{
+                                                p.category.cat_name }}</a>
+                                            {% else %}
+                                            <span class="text-muted italic">Uncategorized</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if p_disc > 0 %}
+                                        <span class="text-success discount-origin-text">Item Discount: -{{ p_disc
+                                            }}%</span>
+                                        {% endif %}
+                                        {% if c_disc > 0 %}
+                                        <span class="text-info discount-origin-text">Cat Discount ({{
+                                            p.category.cat_name
+                                            }}): -{{ c_disc }}%</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+            </div>
+            </td>
+            <td><small>{{ p.brand.brand_name if p.brand else '-' }}</small></td>
+            <td><small class="text-primary">{{ p.product_code or '-' }}</small></td>
+            <td><small>{{ p.barcode or '-' }}</small></td>
+            <td class="text-end text-muted">Rs. {{ "%.2f"|format(p.buy_price|float) }}</td>
+
+            <td class="text-end">
+                {% if total_disc > 0 %}
+                <div class="d-flex flex-column align-items-end">
+                    <del class="text-muted small">Rs. {{ "%.2f"|format(sale_val) }}</del>
+                    <span class="fw-bold text-primary">Rs. {{ "%.2f"|format(discounted_price) }}</span>
+                </div>
+                {% else %}
+                <span class="fw-bold text-dark">Rs. {{ "%.2f"|format(sale_val) }}</span>
+                {% endif %}
+            </td>
+
+            {% set tax_rate = p.tax_rule.rate|float if p.tax_rule else 0.0 %}
+            {% set tax_val = discounted_price * (tax_rate / 100.0) %}
+            <td class="text-end text-danger fw-bold">Rs. {{ "%.2f"|format(tax_val) }}</td>
+
+            <td class="text-center">{{ p.stock }}</td>
+            <td><span class="badge {% if p.status.name == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">{{
+                    p.status.name }}</span></td>
+
+            <td>
+                <div class="d-flex flex-column history-text">
+                    <span class="text-nowrap"><i class="bx bx-plus-circle text-success me-1"></i> {{
+                        p.created_at.strftime('%d-%m-%Y') if p.created_at else 'N/A' }}</span>
+                    <span class="text-nowrap text-muted"><i class="bx bx-edit text-info me-1"></i> {{
+                        p.updated_at.strftime('%d-%m-%Y') if p.updated_at else '---' }}</span>
+                </div>
+            </td>
+            <td class="text-end">
+                <div class="d-flex justify-content-end gap-1">
+                    <a class="btn btn-sm btn-icon btn-outline-primary"
+                        href="{{ url_for('manage_product.manage_product', id=p.pro_id) }}"><i
+                            class="bx bx-edit-alt"></i></a>
+                    <form action="{{ url_for('manage_product.delete_product', id=p.pro_id) }}" method="POST"
+                        onsubmit="return confirm('Permanently delete this product?');" class="m-0">
+                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger"><i
+                                class="bx bx-trash"></i></button>
+                    </form>
+                </div>
+            </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    {# --- CUSTOMER CARD VIEW --- #}
+
+    {# --- START HERO SECTION & CATEGORIES --- #}
+    {% if banners %}
+    <div id="heroCarousel" class="carousel slide carousel-fade mb-5 shadow-sm rounded overflow-hidden"
+        data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-indicators">
+            {% for b in banners %}
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ loop.index0 }}"
+                class="{% if loop.first %}active{% endif %}" aria-current="true"
+                aria-label="Slide {{ loop.index }}"></button>
+            {% endfor %}
+        </div>
+        <div class="carousel-inner">
+            {% for b in banners %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                <img src="{{ url_for('static', filename='assets/img/banners/' + b.image_url) }}" class="d-block w-100"
+                    style="height: 400px; object-fit: cover;" alt="{{ b.title or 'Banner Image' }}" loading="lazy">
+                {% if b.title %}
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded px-3 py-2">
+                    <h3 class="text-white mb-0">{{ b.title }}</h3>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+    {% endif %}
+
+    {% if parent_categories %}
+    <div class="mb-5">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">Browse Categories</h5>
+        <div class="d-flex overflow-auto pb-3 gap-3"
+            style="white-space: nowrap; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+            {% for cat in parent_categories %}
+            <a href="{{ url_for('product.products', category_id=cat.cat_id) }}"
+                class="text-decoration-none text-center d-inline-block p-2" style="min-width: 150px;">
+                <div class="bg-white rounded-circle shadow-sm mb-3 mx-auto d-flex align-items-center justify-content-center border"
+                    style="width: 100px; height: 100px; transition: transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+                    <img src="{{ url_for('static', filename='assets/img/categories/' + (cat.image_url or 'default_category.png')) }}"
+                        alt="{{ cat.cat_name }}" style="width: 65px; height: 65px; object-fit: contain;">
+                </div>
+                <span class="fw-bold text-dark fs-6 text-wrap text-break d-block" style="line-height: 1.3;">{{
+                    cat.cat_name
+                    }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {# --- END HERO SECTION & CATEGORIES --- #}
+
+    <div class="row">
+        {% for p in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm border-0 hover-shadow">
+                <a href="{{ url_for('product.product_detail', id=p.pro_id) }}"
+                    class="position-relative d-block group-hover">
+                    <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                        class="card-img-top rounded-top transition-all" alt="{{ p.name }}">
+
+                    {# --- Pillar 7: Dynamic Trust Badges (Stacked vertically on the right) --- #}
+                    <div class="position-absolute top-0 end-0 m-2 d-flex flex-column gap-1" style="z-index: 1;">
+                        {% if p.stock <= 0 or p.status.name=='OUT_OF_STOCK' %} <span
+                            class="badge bg-danger shadow-sm px-2 py-1" style="font-size: 0.75rem; opacity: 0.95;">Sold
+                            Out</span>
+                            {% else %}
+                            {% if p.is_best_seller %}
+                            <span class="badge bg-warning text-dark shadow-sm px-2 py-1" style="font-size: 0.7rem;"><i
+                                    class="bx bxs-hot me-1"></i> Best Seller</span>
+                            {% endif %}
+                            {% if p.is_low_stock %}
+                            <span class="badge bg-danger shadow-sm px-2 py-1" style="font-size: 0.7rem;"><i
+                                    class="bx bx-alarm-exclamation me-1"></i> Low Stock</span>
+                            {% endif %}
+                            {% endif %}
+                    </div>
+
+                    {# --- Pillar 7: New Arrival Badge (Top left) --- #}
+                    {% if p.is_new_arrival %}
+                    <div class="position-absolute top-0 start-0 m-2" style="z-index: 1;">
+                        <span class="badge bg-primary shadow-sm px-2 py-1" style="font-size: 0.7rem;"><i
+                                class="bx bx-star me-1"></i> New</span>
+                    </div>
+                    {% endif %}
+
+                    {# --- Pillar 8: Admin Status Badge (Bottom left of Image) --- #}
+                    {% if session.get('role') == 'ADMIN' %}
+                    <div class="position-absolute bottom-0 start-0 m-2" style="z-index: 1;">
+                        {% set st = p.status.name %}
+                        <span
+                            class="badge {% if st == 'ACTIVE' %}bg-success{% elif st == 'INACTIVE' %}bg-warning text-dark{% elif st == 'ARCHIVED' %}bg-secondary{% else %}bg-danger{% endif %} shadow-sm px-2 py-1"
+                            style="font-size: 0.7rem;">
+                            <i
+                                class="bx {% if st == 'ACTIVE' %}bx-check-circle{% elif st == 'INACTIVE' %}bx-pause-circle{% elif st == 'ARCHIVED' %}bx-archive{% else %}bx-x-circle{% endif %} me-1"></i>
+                            {{ st }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick View Overlay -->
+                    <div class="position-absolute top-50 start-50 translate-middle opacity-0 transition-opacity quick-view-overlay"
+                        style="z-index: 2;">
+                        <button type="button" class="btn btn-light rounded-circle shadow-lg p-2 btn-quick-view"
+                            data-product-id="{{ p.pro_id }}" title="Quick View">
+                            <i class='bx bx-zoom-in fs-4 text-primary'></i>
+                        </button>
+                    </div>
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-1">{{ p.name }}</h5>
+                    <p class="mb-2"><span class="badge bg-light border badge-art">Art: {{ p.product_code or 'N/A'
+                            }}</span></p>
+
+                    {% set sale_val = p.sale_price|float %}
+                    {% set p_disc = p.discount|float if p.discount else 0.0 %}
+                    {% set c_disc = p.category.discount|float if p.category and p.category.discount else 0.0 %}
+                    {% set total_disc_percent = p_disc + c_disc %}
+
+                    <div class="d-flex flex-column mt-2">
+                        {% if total_disc_percent > 0 %}
+                        <div class="d-flex align-items-center flex-wrap gap-1 mb-2">
+                            <span class="price-original">Rs. {{ "{:,.2f}".format(sale_val) }}</span>
+                            {% if c_disc > 0 %}
+                            <span class="badge bg-label-info discount-badge">{{ c_disc }}% off on {{ p.category.cat_name
+                                }}</span>
+                            {% endif %}
+                            {% if p_disc > 0 %}
+                            <span class="badge bg-label-success discount-badge">{{ p_disc }}% Item Disc.</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% set discounted_sale = sale_val * (1.0 - (total_disc_percent / 100.0)) %}
+                        {% set tax_rate = p.tax_rule.rate|float if p.tax_rule else 0.0 %}
+                        {% set tax_val = discounted_sale * (tax_rate / 100.0) %}
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Net Price:</small>
+                            <span class="fw-bold text-dark">Rs. {{ "{:,.2f}".format(discounted_sale) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">GST ({{ tax_rate }}%):</small>
+                            <span class="text-danger small">+ Rs. {{ "{:,.2f}".format(tax_val) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center border-top mt-2 pt-1">
+                            <small class="fw-bold">Total Payable:</small>
+                            <span class="h6 mb-0 fw-bold text-primary">Rs. {{ "{:,.2f}".format(discounted_sale +
+                                tax_val) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        {% if p.stock <= 0 or p.status.name=='OUT_OF_STOCK' %} <button
+                            class="btn btn-secondary btn-sm w-100 shadow-sm" disabled>
+                            <i class="bx bx-block me-1"></i> Sold Out
+                            </button>
+                            {% else %}
+                            <a href="{{ url_for('cart.add_to_cart', product_id=p.pro_id) }}"
+                                class="btn btn-primary btn-sm w-100 shadow-sm">
+                                <i class="bx bx-cart-add me-1"></i> Add to Cart
+                            </a>
+                            {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <i class="bx bx-search-alt display-1 text-muted opacity-25"></i>
+            <h3 class="fw-bold">No items found</h3>
+            <p class="text-muted">We couldn't find any products matching your selection.</p>
+            <a href="{{ url_for('complete_profile.view_categories') }}" class="btn btn-outline-primary mt-3">Back to
+                Categories</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+
+
+<!-- Quick View Modal Architecture -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-3 z-3 bg-white"
+                data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
+                        <img id="qvImage" src="" class="img-fluid rounded shadow-sm"
+                            style="max-height: 350px; object-fit: contain;">
+                    </div>
+                    <div class="col-md-6 p-4 d-flex flex-column">
+                        <span id="qvArt" class="badge bg-label-dark align-self-start mb-2"></span>
+                        <h4 id="qvName" class="fw-bold text-dark mb-1"></h4>
+                        <hr class="my-3">
+
+                        <div class="d-flex align-items-baseline gap-2 mb-3">
+                            <h3 id="qvPrice" class="text-primary fw-bold mb-0"></h3>
+                            <span id="qvOriginalPrice"
+                                class="text-muted text-decoration-line-through small d-none"></span>
+                            <span id="qvDiscountBadge" class="badge bg-label-success ms-2 d-none"></span>
+                        </div>
+
+                        <div id="qvStockStatus" class="mb-4"></div>
+
+                        <p id="qvDescription" class="text-muted small mb-4"
+                            style="display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                        </p>
+
+                        <div class="mt-auto d-grid gap-2">
+                            <a id="qvAddToCartBtn" href="#" class="btn btn-primary btn-lg"><i
+                                    class="bx bx-cart-add me-2"></i> Add to Cart</a>
+                            <a id="qvViewFullBtn" href="#" class="btn btn-outline-secondary"><i
+                                    class="bx bx-link-external me-2"></i> View Full Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_js %}
+<script>
+    window.ProductApiConfig = {
+        searchUrl: "{{ url_for('catalog.api_search') }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='js/product_catalog_actions.js') }}"></script>
+{% endblock %}
