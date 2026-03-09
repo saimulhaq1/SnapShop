@@ -47,6 +47,8 @@ def addresses():
     return render_template(
         'address.html', 
         addresses=query.order_by(sort_logic).all(), 
+        CommonStatus=CommonStatus,
+        is_admin=is_admin
     )
 
 @address_admin_bp.route('/address/update-status', methods=['POST'])
