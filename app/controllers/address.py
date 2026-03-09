@@ -47,6 +47,27 @@ def addresses():
     return render_template(
         'address.html', 
         addresses=query.order_by(sort_logic).all(), 
-        CommonStatus=CommonStatus,
-        is_admin=is_admin
     )
+
+@address_admin_bp.route('/address/update-status', methods=['POST'])
+@admin_permission_required('hide_address_page', 'Update Address Status')
+def update_address_status():
+    """AJAX endpoint to update an address's status"""
+    data = request.get_json()
+    if not data or 'address_id' not in data or 'status' not in data:
+        return jsonify({'success': False, 'error': 'Missing parameters'}), 400
+        
+    address = Address.query.get(data['address_id'])
+    if not address:
+        return jsonify({'success': False, 'error': 'Address not found'}), 404
+        
+    try:
+        new_status = CommonStatus[data['status'].upper()]
+        address.status = new_status
+        db.session.commit()
+        return jsonify({'success': True})
+    except KeyError:
+        return jsonify({'success': False, 'error': 'Invalid status provided'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
