@@ -66,4 +66,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 5000);
     });
 
+    // --- Notification Delete (X button) ---
+    document.querySelectorAll('.delete-notif-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var notifId = btn.getAttribute('data-id');
+            var listItem = btn.closest('li');
+
+            fetch('/notifications/' + notifId + '/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.success && listItem) {
+                        listItem.style.transition = 'opacity 0.3s';
+                        listItem.style.opacity = '0';
+                        setTimeout(function () { listItem.remove(); }, 300);
+                        // Update badge count
+                        var badge = document.querySelector('.badge-notifications');
+                        if (badge) {
+                            var count = parseInt(badge.textContent) || 0;
+                            if (count > 1) {
+                                badge.textContent = count - 1;
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+                    }
+                })
+                .catch(function () {
+                    if (listItem) {
+                        listItem.style.transition = 'opacity 0.3s';
+                        listItem.style.opacity = '0';
+                        setTimeout(function () { listItem.remove(); }, 300);
+                    }
+                });
+        });
+    });
+
 });
