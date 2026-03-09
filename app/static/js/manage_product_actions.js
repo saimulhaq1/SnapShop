@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     fileNameDisplay.classList.add('text-primary');
                 }
 
-                // Show preview
+                // Show preview with remove button
                 var reader = new FileReader();
                 reader.onload = function (e) {
                     if (previewImg) {
@@ -30,6 +30,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     if (previewContainer) {
                         previewContainer.classList.remove('d-none');
+                        // Add remove button if not already present
+                        if (!previewContainer.querySelector('.preview-remove-btn')) {
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'btn btn-sm btn-outline-danger mt-2 preview-remove-btn';
+                            removeBtn.innerHTML = '<i class="bx bx-trash me-1"></i>Remove';
+                            removeBtn.addEventListener('click', function () {
+                                imageFile.value = '';
+                                previewContainer.classList.add('d-none');
+                                previewImg.src = '';
+                                if (fileNameDisplay) {
+                                    fileNameDisplay.textContent = 'No file chosen';
+                                    fileNameDisplay.classList.remove('text-primary');
+                                    fileNameDisplay.classList.add('text-muted');
+                                }
+                                removeBtn.remove();
+                            });
+                            previewContainer.appendChild(removeBtn);
+                        }
                     }
                 };
                 reader.readAsDataURL(file);
@@ -37,36 +56,70 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // === GALLERY IMAGES PREVIEW ===
+    // === GALLERY IMAGES PREVIEW (With Individual Removal Tracking) ===
     var additionalImages = document.getElementById('additional_images');
     var galleryContainer = document.getElementById('gallery-preview-container');
+    // We use a DataTransfer object to hold the current batch of files so we can remove individual ones.
+    var currentGalleryFiles = new DataTransfer();
 
     if (additionalImages) {
         additionalImages.addEventListener('change', function () {
-            // Remove previously-added new previews (keep existing server images)
-            var oldPreviews = galleryContainer.querySelectorAll('.gallery-item-new');
-            oldPreviews.forEach(function (el) { el.remove(); });
-
+            // Append newly selected files to our DataTransfer object
             if (this.files) {
-                Array.from(this.files).forEach(function (file, index) {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        var wrapper = document.createElement('div');
-                        wrapper.className = 'position-relative border rounded bg-white gallery-item-new';
-                        wrapper.style.cssText = 'width: 80px; height: 80px;';
-                        wrapper.id = 'new-img-' + index;
-
-                        var img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'w-100 h-100';
-                        img.style.cssText = 'object-fit: cover; border-radius: 4px;';
-
-                        wrapper.appendChild(img);
-                        galleryContainer.appendChild(wrapper);
-                    };
-                    reader.readAsDataURL(file);
+                Array.from(this.files).forEach(function (file) {
+                    currentGalleryFiles.items.add(file);
                 });
             }
+
+            // Sync the input state
+            this.files = currentGalleryFiles.files;
+
+            // Re-render previews
+            renderGalleryPreviews();
+        });
+    }
+
+    function renderGalleryPreviews() {
+        // Clear all currently displayed *new* previews
+        var oldPreviews = galleryContainer.querySelectorAll('.gallery-item-new');
+        oldPreviews.forEach(function (el) { el.remove(); });
+
+        Array.from(currentGalleryFiles.files).forEach(function (file, index) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'position-relative border rounded bg-white gallery-item-new shadow-sm';
+                wrapper.style.cssText = 'width: 80px; height: 80px;';
+
+                var img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'w-100 h-100';
+                img.style.cssText = 'object-fit: cover; border-radius: 4px;';
+
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle rounded-circle p-0 d-flex align-items-center justify-content-center shadow';
+                removeBtn.style.cssText = 'width: 22px; height: 22px; z-index: 10;';
+                // Add the X icon inside the button
+                removeBtn.innerHTML = '<i class="bx bx-x" style="font-size: 14px;"></i>';
+
+                removeBtn.addEventListener('click', function (evt) {
+                    evt.preventDefault();
+                    // Rebuild the DataTransfer object without this specific file
+                    var newDt = new DataTransfer();
+                    Array.from(currentGalleryFiles.files).forEach(function (f, i) {
+                        if (i !== index) newDt.items.add(f);
+                    });
+                    currentGalleryFiles = newDt;
+                    if (additionalImages) additionalImages.files = currentGalleryFiles.files;
+                    renderGalleryPreviews();
+                });
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                galleryContainer.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
         });
     }
 

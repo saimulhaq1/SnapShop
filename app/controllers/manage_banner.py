@@ -65,7 +65,7 @@ def add_banner():
             
     return redirect(url_for('banner_admin.manage_banners'))
 
-@banner_bp.route('/admin/banners/delete/<int:id>', methods=['POST'])
+@banner_bp.route('/admin/banners/delete/<int:id>', methods=['GET', 'POST'])
 @admin_permission_required('hide_banner_page', 'Delete Banner')
 def delete_banner(id):
     banner = Banner.query.get_or_404(id)

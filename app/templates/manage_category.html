@@ -129,6 +129,21 @@
                         }
                         if (previewContainer) {
                             previewContainer.classList.remove('d-none');
+
+                            // Add remove button if not already present
+                            if (!previewContainer.querySelector('.preview-remove-btn')) {
+                                var removeBtn = document.createElement('button');
+                                removeBtn.type = 'button';
+                                removeBtn.className = 'btn btn-sm btn-outline-danger mt-2 preview-remove-btn';
+                                removeBtn.innerHTML = '<i class="bx bx-trash me-1"></i>Remove';
+                                removeBtn.addEventListener('click', function () {
+                                    imageInput.value = '';
+                                    previewContainer.classList.add('d-none');
+                                    previewImg.src = '';
+                                    removeBtn.remove();
+                                });
+                                previewContainer.appendChild(removeBtn);
+                            }
                         }
                     };
                     reader.readAsDataURL(this.files[0]);
