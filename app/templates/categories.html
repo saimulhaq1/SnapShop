@@ -107,6 +107,8 @@
                         <td class="text-center">
                             {% if c.status.name == 'ACTIVE' %}
                             <span class="badge bg-success text-uppercase" style="font-size: 0.75rem;">Active</span>
+                            {% elif c.status.name == 'BLOCKED' %}
+                            <span class="badge bg-danger text-uppercase" style="font-size: 0.75rem;">Blocked</span>
                             {% else %}
                             <span class="badge bg-secondary text-uppercase" style="font-size: 0.75rem;">Inactive</span>
                             {% endif %}
