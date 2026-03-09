@@ -425,8 +425,16 @@
                         <!-- Admin / Author delete -->
                         {% if session.get('role') == 'ADMIN' or session.get('user_id') == rev.customer_id %}
                         <a href="{{ url_for('reviews.delete_review', review_id=rev.review_id) }}"
-                            class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                            class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete Review">
                             <i class="bx bx-trash"></i>
+                        </a>
+                        {% endif %}
+
+                        <!-- Admin Remove Rating -->
+                        {% if session.get('role') == 'ADMIN' and rev.rating %}
+                        <a href="{{ url_for('reviews.remove_rating', review_id=rev.review_id) }}"
+                            class="btn btn-sm btn-outline-warning py-0 px-2" title="Remove Rating">
+                            <i class="bx bx-star-x"></i>
                         </a>
                         {% endif %}
                     </div>
@@ -474,24 +482,18 @@
                 </div>
                 <div class="card-body p-3">
                     {% if session.get('user_id') %}
-                    {# Check if the user already reviewed this product to hide the form #}
-                    {% set user_already_reviewed = False %}
+                    {# Check if the user already rated this product #}
+                    {% set ns = namespace(already_rated=False) %}
                     {% for r in reviews %}
-                    {% if r.customer_id == session.get('user_id') and r.parent_id == None %}
-                    {% set user_already_reviewed = True %}
+                    {% if r.customer_id == session.get('user_id') and r.parent_id == None and r.rating %}
+                    {% set ns.already_rated = True %}
                     {% endif %}
                     {% endfor %}
 
-                    {% if user_already_reviewed %}
-                    <div class="text-center py-4">
-                        <i class="bx bx-check-circle display-4 text-success mb-2"></i>
-                        <h6 class="fw-bold text-dark">Review Submitted</h6>
-                        <p class="text-muted small mb-3">You have already shared your feedback for this product. Thank
-                            you!</p>
-                    </div>
-                    {% else %}
                     <form method="POST" action="{{ url_for('product.submit_review', id=product.pro_id) }}"
                         enctype="multipart/form-data">
+
+                        {% if not ns.already_rated %}
                         <div class="mb-3">
                             <label class="form-label fw-semibold small text-muted text-uppercase"
                                 style="letter-spacing:0.5px;">Your Rating</label>
@@ -503,6 +505,12 @@
                             <input type="hidden" name="rating" id="rating_input" value="">
                             <small class="text-muted mt-1 d-block">Click a star to rate</small>
                         </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <p class="text-muted small mb-0"><i class="bx bx-info-circle me-1"></i> You have already
+                                rated this product. You can leave an additional comment below.</p>
+                        </div>
+                        {% endif %}
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold small text-muted text-uppercase"
@@ -525,7 +533,6 @@
                             <i class="bx bx-send me-1"></i>Submit Review
                         </button>
                     </form>
-                    {% endif %}
                     {% else %}
                     <div class="text-center py-4">
                         <i class="bx bx-lock-alt display-4 text-muted mb-2"></i>

@@ -288,15 +288,20 @@ def submit_review(id):
         flash("Review comment cannot be empty.", "danger")
         return redirect(url_for('product.product_detail', id=id) + '#reviews')
         
-    if not rating or not (1 <= rating <= 5):
-        flash("Please provide a valid rating between 1 and 5.", "danger")
-        return redirect(url_for('product.product_detail', id=id) + '#reviews')
-        
-    # Check if user already reviewed this product
-    existing_review = ProductReview.query.filter_by(product_id=id, customer_id=user_id, parent_id=None).first()
-    if existing_review:
-        flash("You have already reviewed this product.", "info")
-        return redirect(url_for('product.product_detail', id=id) + '#reviews')
+    # Check if user already rated this product
+    existing_rating_review = ProductReview.query.filter(
+        ProductReview.product_id == id,
+        ProductReview.customer_id == user_id,
+        ProductReview.parent_id == None,
+        ProductReview.rating.isnot(None)
+    ).first()
+    
+    if existing_rating_review:
+        rating = None # Ignore the submitted rating, limit 1 per customer
+    else:
+        if not rating or not (1 <= rating <= 5):
+            flash("Please provide a valid rating between 1 and 5.", "danger")
+            return redirect(url_for('product.product_detail', id=id) + '#reviews')
         
     # Check if this is a verified purchase
     is_verified = ProductReview.check_if_verified(user_id, id)

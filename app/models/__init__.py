@@ -21,7 +21,7 @@ from .sales_order_model import SalesOrder
 from .sales_order_item_model import SalesOrderItem
 from .payment_model import Payment, PaymentMethod
 from .cart_model import Cart
-from .review_model import ProductReview
+from .review_model import ProductReview, ReviewPhoto
 from .vote_tracking_model import VoteTracking
 from .voucher_model import Voucher, VoucherUsage
 from .banner_model import Banner
@@ -37,6 +37,6 @@ __all__ = [
     'Customer', 'Address',
     'Category', 'Product', 'ProductImage', 'Brand', 'TaxRate',
     'SalesOrder', 'SalesOrderItem', 'PaymentMethod', 'Payment', 'Cart',
-    'ProductReview', 'VoteTracking', 'Voucher', 'VoucherUsage', 'Banner',
+    'ProductReview', 'ReviewPhoto', 'VoteTracking', 'Voucher', 'VoucherUsage', 'Banner',
     'Notification'
 ]

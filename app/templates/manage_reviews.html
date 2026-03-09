@@ -111,6 +111,13 @@
                                 </button>
                                 {% endif %}
 
+                                {% if rev.rating %}
+                                <a href="{{ url_for('reviews.remove_rating', review_id=rev.review_id, redirect_to='manage_reviews') }}"
+                                    class="btn btn-sm btn-warning" title="Remove Rating">
+                                    <i class="bx bx-star-x"></i> Remove Rating
+                                </a>
+                                {% endif %}
+
                                 <!-- Delete button -->
                                 <a href="{{ url_for('reviews.delete_review', review_id=rev.review_id, redirect_to='manage_reviews') }}"
                                     class="btn btn-sm btn-danger" title="Delete">

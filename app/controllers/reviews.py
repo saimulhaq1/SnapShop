@@ -203,10 +203,29 @@ def delete_review(review_id):
     db.session.commit()
 
     flash("Review deleted successfully.", "success")
-    if request.form.get('redirect_to') == 'manage_reviews':
-        return redirect(url_for('reviews.manage_reviews'))
-
     return redirect(request.referrer or url_for('product.product_detail', id=product_id))
+
+
+# ---------------------------------------------------------------------------
+# GET /reviews/remove_rating/<review_id>  — Admin remove rating
+# ---------------------------------------------------------------------------
+@reviews_bp.route('/reviews/remove_rating/<int:review_id>', methods=['GET'])
+def remove_rating(review_id):
+    user_id = session.get('user_id')
+    role = session.get('role')
+    
+    if not user_id or role != 'ADMIN':
+        flash("Unauthorized: Admin access required.", "danger")
+        return redirect(request.referrer or url_for('product.products'))
+
+    review = ProductReview.query.get_or_404(review_id)
+    review.rating = None
+    db.session.commit()
+
+    flash("Rating removed successfully.", "success")
+    if request.args.get('redirect_to') == 'manage_reviews':
+        return redirect(url_for('reviews.manage_reviews'))
+    return redirect(request.referrer or url_for('product.product_detail', id=review.product_id))
 
 
 # ---------------------------------------------------------------------------
