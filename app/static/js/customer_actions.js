@@ -68,3 +68,38 @@ function updateAddressStatus(addressId, newStatus, selectEl) {
             alert('Network error. Address status was not updated.');
         });
 }
+
+/**
+ * Payment Status toggle
+ */
+function changePaymentStatus(selectEl) {
+    var originalValue = selectEl.getAttribute('data-original') || selectEl.querySelector('option[selected]')?.value;
+    var url = selectEl.getAttribute('data-update-url');
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: selectEl.value })
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                selectEl.className = 'form-select form-select-sm fw-bold';
+                if (selectEl.value === 'PAID') {
+                    selectEl.classList.add('text-success', 'border-success');
+                } else if (selectEl.value === 'FAILED') {
+                    selectEl.classList.add('text-danger', 'border-danger');
+                } else {
+                    selectEl.classList.add('text-warning', 'border-warning');
+                }
+                selectEl.setAttribute('data-original', selectEl.value);
+            } else {
+                selectEl.value = originalValue || 'PENDING';
+                alert('Failed to update payment status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(function () {
+            selectEl.value = originalValue || 'PENDING';
+            alert('Network error. Payment status was not updated.');
+        });
+}
