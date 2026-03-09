@@ -422,14 +422,12 @@
                         </button>
                         {% endif %}
 
-                        {# Admin / Author delete #}
+                        <!-- Admin / Author delete -->
                         {% if session.get('role') == 'ADMIN' or session.get('user_id') == rev.customer_id %}
-                        <form method="POST" action="{{ url_for('reviews.delete_review', review_id=rev.review_id) }}"
-                            class="d-inline" onsubmit="return confirm('Delete this review?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
-                                <i class="bx bx-trash"></i>
-                            </button>
-                        </form>
+                        <a href="{{ url_for('reviews.delete_review', review_id=rev.review_id) }}"
+                            class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                            <i class="bx bx-trash"></i>
+                        </a>
                         {% endif %}
                     </div>
 

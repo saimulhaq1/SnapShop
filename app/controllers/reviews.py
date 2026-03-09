@@ -182,7 +182,7 @@ def vote_review(review_id):
 # ---------------------------------------------------------------------------
 # POST /reviews/delete/<review_id>  — Admin or Author delete
 # ---------------------------------------------------------------------------
-@reviews_bp.route('/reviews/delete/<int:review_id>', methods=['POST'])
+@reviews_bp.route('/reviews/delete/<int:review_id>', methods=['GET', 'POST'])
 def delete_review(review_id):
     user_id = session.get('user_id')
     role = session.get('role')
