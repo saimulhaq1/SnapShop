@@ -25,6 +25,33 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.0">
 
+    <!-- Structural Patch: Define missing Sneat CSS variables -->
+    <style>
+        :root {
+            --bs-layout-menu-width: 260px;
+        }
+
+        .layout-page {
+            padding-left: var(--bs-layout-menu-width) !important;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            width: 100% !important;
+            flex-grow: 1 !important;
+            display: block !important;
+            inline-size: auto !important;
+        }
+
+        @media (max-width: 1199.98px) {
+            .layout-page {
+                padding-left: 0 !important;
+            }
+        }
+    </style>
+
     <script src="{{ url_for('static', filename='assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/config.js') }}"></script>
 </head>
@@ -215,456 +242,444 @@
                     </li>
                     {% endif %}
                 </ul>
-                {% endif %}
+            </aside>
+            {% endif %}
 
-                {% block cust_drawer %}
-                {% if not is_admin %}
-                <!-- Customer: slide-out drawer overlay -->
-                <div class="cust-drawer-overlay" id="custDrawerOverlay" onclick="closeCustDrawer()"></div>
-                <!-- Customer: slide-out drawer panel -->
-                <div class="cust-drawer" id="custDrawer">
-                    <!-- Amazon-style dark header -->
-                    <div class="cust-drawer-header">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bx bx-user-circle" style="font-size: 1.6rem;"></i>
-                            <strong>Hello{% if session.get('user_id') %}, {{ session.get('username', 'Customer') }}{%
-                                endif %}</strong>
-                        </div>
-                        <button onclick="closeCustDrawer()" class="btn-close btn-close-white"
-                            aria-label="Close"></button>
+            {% block cust_drawer %}
+            {% if not is_admin %}
+            <!-- Customer: slide-out drawer overlay -->
+            <div class="cust-drawer-overlay" id="custDrawerOverlay" onclick="closeCustDrawer()"></div>
+            <!-- Customer: slide-out drawer panel -->
+            <div class="cust-drawer" id="custDrawer">
+                <!-- Amazon-style dark header -->
+                <div class="cust-drawer-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bx bx-user-circle" style="font-size: 1.6rem;"></i>
+                        <strong>Hello{% if session.get('user_id') %}, {{ session.get('username', 'Customer') }}{%
+                            endif %}</strong>
                     </div>
-                    <nav class="cust-drawer-nav flex-grow-1" style="overflow-y: auto;">
-
-                        <!-- ═══ TRENDING ═══ -->
-                        <div class="cust-drawer-section">
-                            <i class="bx bx-trending-up me-1"></i> Trending
-                        </div>
-                        {% if sidebar_trending %}
-                        {% for p in sidebar_trending %}
-                        <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
-                            <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
-                                class="sidebar-thumb">
-                            <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
-                        </a>
-                        {% endfor %}
-                        {% else %}
-                        <div class="cust-drawer-empty">No trending items this week</div>
-                        {% endif %}
-
-                        <!-- ═══ BEST SELLERS ═══ -->
-                        <div class="cust-drawer-section">
-                            <i class="bx bxs-hot me-1" style="color: #e47911;"></i> Best Sellers
-                        </div>
-                        {% if sidebar_best_sellers %}
-                        {% for p in sidebar_best_sellers %}
-                        <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
-                            <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
-                                class="sidebar-thumb">
-                            <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
-                        </a>
-                        {% endfor %}
-                        {% else %}
-                        <div class="cust-drawer-empty">No best sellers this week</div>
-                        {% endif %}
-
-                        <!-- ═══ NEW RELEASES ═══ -->
-                        <div class="cust-drawer-section">
-                            <i class="bx bx-star me-1" style="color: #007BFF;"></i> New Releases
-                        </div>
-                        {% if sidebar_new_releases %}
-                        {% for p in sidebar_new_releases %}
-                        <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
-                            <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
-                                class="sidebar-thumb">
-                            <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
-                        </a>
-                        {% endfor %}
-                        {% else %}
-                        <div class="cust-drawer-empty">No new products this week</div>
-                        {% endif %}
-
-                        <!-- ═══ SHOP BY DEPARTMENT ═══ -->
-                        <div class="cust-drawer-section">
-                            <i class="bx bx-store me-1"></i> Shop By Department
-                        </div>
-                        <a href="{{ url_for('product.products') }}"><i class="bx bx-grid-alt"></i> All Products</a>
-                        {% if sidebar_categories %}
-                        {% for cat in sidebar_categories %}
-                        <a href="{{ url_for('product.products', category_id=cat.cat_id) }}"
-                            class="d-flex justify-content-between align-items-center">
-                            <span>{{ cat.cat_name }}</span>
-                            {% if cat.subcategories %}<i class="bx bx-chevron-right"
-                                style="font-size:1.1rem; color:#999;"></i>{% endif %}
-                        </a>
-                        {% endfor %}
-                        {% endif %}
-
-                        <!-- ═══ HELP & SETTINGS ═══ -->
-                        <div class="cust-drawer-section">
-                            <i class="bx bx-cog me-1"></i> Help & Settings
-                        </div>
-                        {% if session.get('user_id') %}
-                        <a href="{{ url_for('order.order_list') }}"><i class="bx bx-package"></i> Your Orders</a>
-                        <a href="{{ url_for('cart.cart_view') }}"><i class="bx bx-cart"></i> Your Cart</a>
-                        <a href="{{ url_for('payment.payments') }}"><i class="bx bx-credit-card"></i> Your Payments</a>
-                        <a href="{{ url_for('profile.profile_settings') }}"><i class="bx bx-user"></i> Your Account</a>
-                        <a href="{{ url_for('system.about') }}"><i class="bx bx-info-circle"></i> About SnapShop</a>
-                        <a href="{{ url_for('system.support') }}"><i class="bx bx-help-circle"></i> Customer Service</a>
-                        <a href="{{ url_for('login.logout') }}" class="text-danger"><i class="bx bx-log-out"></i> Sign
-                            Out</a>
-                        {% else %}
-                        <a href="{{ url_for('login.login') }}"><i class="bx bx-log-in"></i> Sign In</a>
-                        <a href="{{ url_for('system.about') }}"><i class="bx bx-info-circle"></i> About SnapShop</a>
-                        <a href="{{ url_for('system.support') }}"><i class="bx bx-help-circle"></i> Customer Service</a>
-                        {% endif %}
-                    </nav>
+                    <button onclick="closeCustDrawer()" class="btn-close btn-close-white" aria-label="Close"></button>
                 </div>
-                <!-- Floating hamburger button -->
-                <button class="cust-menu-toggle" onclick="openCustDrawer()" aria-label="Menu">
-                    <i class="bx bx-menu"></i>
-                </button>
-                {% endif %}
-                {% endblock %}
+                <nav class="cust-drawer-nav flex-grow-1" style="overflow-y: auto;">
 
-                <div class="layout-page {% if not is_admin %}customer-layout-page{% endif %}">
-                    <div class="content-wrapper">
-                        <div class="container-xxl flex-grow-1 container-p-y">
-
-                            {% if is_admin %}
-                            <div class="alert alert-dark d-flex justify-content-between align-items-center mb-4 py-2 shadow-sm"
-                                role="alert">
-                                <div class="d-flex align-items-center">
-                                    <i class="bx bx-shield-quarter me-2"></i>
-                                    <div class="small fw-bold"> Administrator Session Active
-                                        {% if session.get('is_super_admin') %}(Super User){% endif %}
-                                    </div>
-                                </div>
-                                <!-- Admin Notification Bell -->
-                                <div class="dropdown">
-                                    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
-                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" id="adminNotifBell">
-                                        <i class="bx bx-bell fs-4 position-relative">
-                                            {% set unread_admin = current_notifications | selectattr('is_read',
-                                            'equalto',
-                                            False) | list %}
-                                            <span
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white {% if unread_admin|length == 0 %}d-none{% endif %}"
-                                                id="adminNotifBadge" style="font-size: 0.60rem; padding: 0.25em 0.4em;">
-                                                {{ unread_admin|length }}
-                                            </span>
-                                        </i>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 350px;">
-                                        <li class="dropdown-header border-bottom p-3 text-center fw-bold">
-                                            <span><i class="bx bx-bell me-2"></i>Notifications</span>
-                                            <span class="badge bg-primary ms-2" id="adminNotifCount">{{
-                                                unread_admin|length
-                                                }} New</span>
-                                        </li>
-                                        <li class="p-0">
-                                            <ul class="nav nav-tabs nav-fill px-3 pt-2" role="tablist">
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link active small py-2" role="tab"
-                                                        data-bs-toggle="tab"
-                                                        data-bs-target="#admin-orders-tab">Orders</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link small py-2" role="tab"
-                                                        data-bs-toggle="tab"
-                                                        data-bs-target="#admin-reviews-tab">Reviews</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link small py-2" role="tab"
-                                                        data-bs-toggle="tab"
-                                                        data-bs-target="#admin-system-tab">System</button>
-                                                </li>
-                                            </ul>
-                                            <div class="tab-content p-0" style="max-height: 350px; overflow-y: auto;">
-                                                <div class="tab-pane fade show active" id="admin-orders-tab"
-                                                    role="tabpanel">
-                                                    <ul class="list-unstyled mb-0" id="adminNotifList">
-                                                        {% set order_notifs = current_notifications | selectattr('type',
-                                                        'equalto', 'ORDER') | list %}
-                                                        {% if order_notifs %}
-                                                        {% for notif in order_notifs %}
-                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
-                                                            <a class="dropdown-item border-bottom py-2 pe-5"
-                                                                href="{{ notif.link or '#' }}">
-                                                                <div class="d-flex align-items-start">
-                                                                    <div class="avatar me-2 flex-shrink-0">
-                                                                        <span
-                                                                            class="avatar-initial rounded bg-label-secondary">
-                                                                            <i class="bx bx-cart text-success"></i>
-                                                                        </span>
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h6
-                                                                            class="mb-1 small fw-bold text-wrap text-dark">
-                                                                            {{ notif.title }}</h6>
-                                                                        <p class="mb-0 small text-muted text-wrap">{{
-                                                                            notif.message }}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </a>
-                                                            <button type="button"
-                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
-                                                                data-id="{{ notif.id }}" aria-label="Close"
-                                                                style="font-size: 0.65rem; z-index: 10;"></button>
-                                                        </li>
-                                                        {% endfor %}
-                                                        {% else %}
-                                                        <li>
-                                                            <div
-                                                                class="dropdown-item text-center text-muted small py-3">
-                                                                No
-                                                                new alerts</div>
-                                                        </li>
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                                <div class="tab-pane fade" id="admin-reviews-tab" role="tabpanel">
-                                                    <ul class="list-unstyled mb-0" id="adminReviewNotifList">
-                                                        {% set review_notifs = current_notifications |
-                                                        selectattr('type',
-                                                        'equalto', 'REVIEW') | list %}
-                                                        {% if review_notifs %}
-                                                        {% for notif in review_notifs %}
-                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
-                                                            <a class="dropdown-item border-bottom py-2 pe-5"
-                                                                href="{{ notif.link or '#' }}">
-                                                                <div class="d-flex align-items-start">
-                                                                    <div class="avatar me-2 flex-shrink-0">
-                                                                        <span
-                                                                            class="avatar-initial rounded bg-label-secondary">
-                                                                            <i
-                                                                                class="bx bx-comment-detail text-warning"></i>
-                                                                        </span>
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h6
-                                                                            class="mb-1 small fw-bold text-wrap text-dark">
-                                                                            {{ notif.title }}</h6>
-                                                                        <p class="mb-0 small text-muted text-wrap">{{
-                                                                            notif.message }}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </a>
-                                                            <button type="button"
-                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
-                                                                data-id="{{ notif.id }}" aria-label="Close"
-                                                                style="font-size: 0.65rem; z-index: 10;"></button>
-                                                        </li>
-                                                        {% endfor %}
-                                                        {% else %}
-                                                        <li>
-                                                            <div
-                                                                class="dropdown-item text-center text-muted small py-3">
-                                                                No
-                                                                new reviews</div>
-                                                        </li>
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                                <div class="tab-pane fade" id="admin-system-tab" role="tabpanel">
-                                                    <ul class="list-unstyled mb-0" id="adminSystemNotifList">
-                                                        {% set admin_sys_notifs = current_notifications |
-                                                        selectattr('type',
-                                                        'equalto', 'SYSTEM') | list %}
-                                                        {% if admin_sys_notifs %}
-                                                        {% for notif in admin_sys_notifs %}
-                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
-                                                            <a class="dropdown-item border-bottom py-2 pe-5"
-                                                                href="{{ notif.link or '#' }}">
-                                                                <div class="d-flex align-items-start">
-                                                                    <div class="avatar me-2 flex-shrink-0">
-                                                                        <span
-                                                                            class="avatar-initial rounded bg-label-secondary">
-                                                                            <i class="bx bx-broadcast text-danger"></i>
-                                                                        </span>
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h6
-                                                                            class="mb-1 small fw-bold text-wrap text-dark">
-                                                                            {{ notif.title }}</h6>
-                                                                        <p class="mb-0 small text-muted text-wrap">{{
-                                                                            notif.message }}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </a>
-                                                            <button type="button"
-                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
-                                                                data-id="{{ notif.id }}" aria-label="Close"
-                                                                style="font-size: 0.65rem; z-index: 10;"></button>
-                                                        </li>
-                                                        {% endfor %}
-                                                        {% else %}
-                                                        <li>
-                                                            <div
-                                                                class="dropdown-item text-center text-muted small py-3">
-                                                                No
-                                                                new system alerts</div>
-                                                        </li>
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4 py-2 shadow-sm"
-                                role="alert">
-                                <div class="d-flex align-items-center">
-                                    <i class="bx bx-user me-2"></i>
-                                    <div class="small fw-bold">Welcome, {{ session.get('username', 'Customer') }}</div>
-                                </div>
-                                <!-- Customer Notification Bell -->
-                                <div class="dropdown">
-                                    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
-                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" id="custNotifBell">
-                                        <i class="bx bx-bell fs-4 text-primary position-relative">
-                                            {% set unread_cust = current_notifications | selectattr('is_read',
-                                            'equalto',
-                                            False) | list %}
-                                            <span
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white {% if unread_cust|length == 0 %}d-none{% endif %}"
-                                                id="custNotifBadge" style="font-size: 0.60rem; padding: 0.25em 0.4em;">
-                                                {{ unread_cust|length }}
-                                            </span>
-                                        </i>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 350px;">
-                                        <li class="dropdown-header border-bottom p-3 text-center fw-bold">
-                                            <span><i class="bx bx-bell text-primary me-2"></i>Your Notifications</span>
-                                        </li>
-                                        <li class="p-0">
-                                            <ul class="nav nav-tabs nav-fill px-3 pt-2" role="tablist">
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link active small py-2" role="tab"
-                                                        data-bs-toggle="tab"
-                                                        data-bs-target="#cust-orders-tab">Orders</button>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <button type="button" class="nav-link small py-2" role="tab"
-                                                        data-bs-toggle="tab"
-                                                        data-bs-target="#cust-system-tab">System</button>
-                                                </li>
-                                            </ul>
-                                            <div class="tab-content p-0" style="max-height: 350px; overflow-y: auto;">
-                                                <div class="tab-pane fade show active" id="cust-orders-tab"
-                                                    role="tabpanel">
-                                                    <ul class="list-unstyled mb-0" id="custNotifList">
-                                                        {% set order_notifs = current_notifications | selectattr('type',
-                                                        'in', ['ORDER_STATUS', 'PAYMENT_STATUS']) | list %}
-                                                        {% if order_notifs %}
-                                                        {% for notif in order_notifs %}
-                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
-                                                            <a class="dropdown-item border-bottom py-2 pe-5"
-                                                                href="{{ notif.link or '#' }}">
-                                                                <div class="d-flex align-items-start">
-                                                                    <i
-                                                                        class="bx fs-4 me-2 mt-1 {% if notif.type == 'ORDER_STATUS' %}bx-package text-primary{% else %}bx-credit-card text-success{% endif %}"></i>
-                                                                    <div class="flex-grow-1">
-                                                                        <h6
-                                                                            class="mb-1 small fw-bold text-wrap text-dark">
-                                                                            {{ notif.title }}</h6>
-                                                                        <p class="mb-0 small text-muted text-wrap">{{
-                                                                            notif.message }}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </a>
-                                                            <button type="button"
-                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
-                                                                data-id="{{ notif.id }}" aria-label="Close"
-                                                                style="font-size: 0.65rem; z-index: 10;"></button>
-                                                        </li>
-                                                        {% endfor %}
-                                                        {% else %}
-                                                        <li>
-                                                            <div
-                                                                class="dropdown-item text-center text-muted small py-3">
-                                                                No
-                                                                recent orders</div>
-                                                        </li>
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                                <div class="tab-pane fade" id="cust-system-tab" role="tabpanel">
-                                                    <ul class="list-unstyled mb-0" id="custSystemNotifList">
-                                                        {% set sys_notifs = current_notifications | rejectattr('type',
-                                                        'in',
-                                                        ['ORDER_STATUS', 'PAYMENT_STATUS']) | list %}
-                                                        {% if sys_notifs %}
-                                                        {% for notif in sys_notifs %}
-                                                        <li id="notif-item-{{ notif.id }}" class="position-relative">
-                                                            <a class="dropdown-item border-bottom py-2 pe-5"
-                                                                href="{{ notif.link or '#' }}">
-                                                                <div class="d-flex align-items-start">
-                                                                    <i
-                                                                        class="bx fs-4 me-2 mt-1 {% if notif.type == 'SALE' %}bx-broadcast text-danger{% else %}bx-bell text-secondary{% endif %}"></i>
-                                                                    <div class="flex-grow-1">
-                                                                        <h6
-                                                                            class="mb-1 small fw-bold text-wrap text-dark">
-                                                                            {{ notif.title }}</h6>
-                                                                        <p class="mb-0 small text-muted text-wrap">{{
-                                                                            notif.message }}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </a>
-                                                            <button type="button"
-                                                                class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
-                                                                data-id="{{ notif.id }}" aria-label="Close"
-                                                                style="font-size: 0.65rem; z-index: 10;"></button>
-                                                        </li>
-                                                        {% endfor %}
-                                                        {% else %}
-                                                        <li>
-                                                            <div
-                                                                class="dropdown-item text-center text-muted small py-3">
-                                                                No
-                                                                new system alerts</div>
-                                                        </li>
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                            {% for category, message in messages %}
-                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show"
-                                role="alert">
-                                {{ message|safe }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                    aria-label="Close"></button>
-                            </div>
-                            {% endfor %}
-                            {% endif %}
-                            {% endwith %}
-
-                            {% block content %}{% endblock %}
-
-                        </div>
-
-                        <footer class="content-footer footer bg-footer-theme text-center py-3">
-                            <div class="container-xxl">
-                                <div class="mb-1">
-                                    <a href="{{ url_for('system.about') }}"
-                                        class="text-muted text-decoration-none small me-3">About Us</a>
-                                    <a href="{{ url_for('system.support') }}"
-                                        class="text-muted text-decoration-none small">Support</a>
-                                </div>
-                                &copy; 2026 <strong>SnapShop</strong> | All Rights Reserved
-                            </div>
-                        </footer>
+                    <!-- ═══ TRENDING ═══ -->
+                    <div class="cust-drawer-section">
+                        <i class="bx bx-trending-up me-1"></i> Trending
                     </div>
+                    {% if sidebar_trending %}
+                    {% for p in sidebar_trending %}
+                    <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
+                        <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                            class="sidebar-thumb">
+                        <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
+                    </a>
+                    {% endfor %}
+                    {% else %}
+                    <div class="cust-drawer-empty">No trending items this week</div>
+                    {% endif %}
+
+                    <!-- ═══ BEST SELLERS ═══ -->
+                    <div class="cust-drawer-section">
+                        <i class="bx bxs-hot me-1" style="color: #e47911;"></i> Best Sellers
+                    </div>
+                    {% if sidebar_best_sellers %}
+                    {% for p in sidebar_best_sellers %}
+                    <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
+                        <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                            class="sidebar-thumb">
+                        <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
+                    </a>
+                    {% endfor %}
+                    {% else %}
+                    <div class="cust-drawer-empty">No best sellers this week</div>
+                    {% endif %}
+
+                    <!-- ═══ NEW RELEASES ═══ -->
+                    <div class="cust-drawer-section">
+                        <i class="bx bx-star me-1" style="color: #007BFF;"></i> New Releases
+                    </div>
+                    {% if sidebar_new_releases %}
+                    {% for p in sidebar_new_releases %}
+                    <a href="{{ url_for('product.product_detail', id=p.pro_id) }}">
+                        <img src="{{ url_for('static', filename='assets/img/products/' + (p.image_url or 'default_product.png')) }}"
+                            class="sidebar-thumb">
+                        <span>{{ p.name[:25] }}{% if p.name|length > 25 %}...{% endif %}</span>
+                    </a>
+                    {% endfor %}
+                    {% else %}
+                    <div class="cust-drawer-empty">No new products this week</div>
+                    {% endif %}
+
+                    <!-- ═══ SHOP BY DEPARTMENT ═══ -->
+                    <div class="cust-drawer-section">
+                        <i class="bx bx-store me-1"></i> Shop By Department
+                    </div>
+                    <a href="{{ url_for('product.products') }}"><i class="bx bx-grid-alt"></i> All Products</a>
+                    {% if sidebar_categories %}
+                    {% for cat in sidebar_categories %}
+                    <a href="{{ url_for('product.products', category_id=cat.cat_id) }}"
+                        class="d-flex justify-content-between align-items-center">
+                        <span>{{ cat.cat_name }}</span>
+                        {% if cat.subcategories %}<i class="bx bx-chevron-right"
+                            style="font-size:1.1rem; color:#999;"></i>{% endif %}
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+
+                    <!-- ═══ HELP & SETTINGS ═══ -->
+                    <div class="cust-drawer-section">
+                        <i class="bx bx-cog me-1"></i> Help & Settings
+                    </div>
+                    {% if session.get('user_id') %}
+                    <a href="{{ url_for('order.order_list') }}"><i class="bx bx-package"></i> Your Orders</a>
+                    <a href="{{ url_for('cart.cart_view') }}"><i class="bx bx-cart"></i> Your Cart</a>
+                    <a href="{{ url_for('payment.payments') }}"><i class="bx bx-credit-card"></i> Your Payments</a>
+                    <a href="{{ url_for('profile.profile_settings') }}"><i class="bx bx-user"></i> Your Account</a>
+                    <a href="{{ url_for('system.about') }}"><i class="bx bx-info-circle"></i> About SnapShop</a>
+                    <a href="{{ url_for('system.support') }}"><i class="bx bx-help-circle"></i> Customer Service</a>
+                    <a href="{{ url_for('login.logout') }}" class="text-danger"><i class="bx bx-log-out"></i> Sign
+                        Out</a>
+                    {% else %}
+                    <a href="{{ url_for('login.login') }}"><i class="bx bx-log-in"></i> Sign In</a>
+                    <a href="{{ url_for('system.about') }}"><i class="bx bx-info-circle"></i> About SnapShop</a>
+                    <a href="{{ url_for('system.support') }}"><i class="bx bx-help-circle"></i> Customer Service</a>
+                    {% endif %}
+                </nav>
+            </div>
+            <!-- Floating hamburger button -->
+            <button class="cust-menu-toggle" onclick="openCustDrawer()" aria-label="Menu">
+                <i class="bx bx-menu"></i>
+            </button>
+            {% endif %}
+            {% endblock %}
+
+            <div class="layout-page {% if not is_admin %}customer-layout-page{% endif %}">
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+
+                        {% if is_admin %}
+                        <div class="alert alert-dark d-flex justify-content-between align-items-center mb-4 py-2 shadow-sm"
+                            role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-shield-quarter me-2"></i>
+                                <div class="small fw-bold"> Administrator Session Active
+                                    {% if session.get('is_super_admin') %}(Super User){% endif %}
+                                </div>
+                            </div>
+                            <!-- Admin Notification Bell -->
+                            <div class="dropdown">
+                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
+                                    data-bs-toggle="dropdown" data-bs-auto-close="outside" id="adminNotifBell">
+                                    <i class="bx bx-bell fs-4 position-relative">
+                                        {% set unread_admin = current_notifications | selectattr('is_read',
+                                        'equalto',
+                                        False) | list %}
+                                        <span
+                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white {% if unread_admin|length == 0 %}d-none{% endif %}"
+                                            id="adminNotifBadge" style="font-size: 0.60rem; padding: 0.25em 0.4em;">
+                                            {{ unread_admin|length }}
+                                        </span>
+                                    </i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 350px;">
+                                    <li class="dropdown-header border-bottom p-3 text-center fw-bold">
+                                        <span><i class="bx bx-bell me-2"></i>Notifications</span>
+                                        <span class="badge bg-primary ms-2" id="adminNotifCount">{{
+                                            unread_admin|length
+                                            }} New</span>
+                                    </li>
+                                    <li class="p-0">
+                                        <ul class="nav nav-tabs nav-fill px-3 pt-2" role="tablist">
+                                            <li class="nav-item">
+                                                <button type="button" class="nav-link active small py-2" role="tab"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#admin-orders-tab">Orders</button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button type="button" class="nav-link small py-2" role="tab"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#admin-reviews-tab">Reviews</button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button type="button" class="nav-link small py-2" role="tab"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#admin-system-tab">System</button>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content p-0" style="max-height: 350px; overflow-y: auto;">
+                                            <div class="tab-pane fade show active" id="admin-orders-tab"
+                                                role="tabpanel">
+                                                <ul class="list-unstyled mb-0" id="adminNotifList">
+                                                    {% set order_notifs = current_notifications | selectattr('type',
+                                                    'equalto', 'ORDER') | list %}
+                                                    {% if order_notifs %}
+                                                    {% for notif in order_notifs %}
+                                                    <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                        <a class="dropdown-item border-bottom py-2 pe-5"
+                                                            href="{{ notif.link or '#' }}">
+                                                            <div class="d-flex align-items-start">
+                                                                <div class="avatar me-2 flex-shrink-0">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-secondary">
+                                                                        <i class="bx bx-cart text-success"></i>
+                                                                    </span>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="mb-1 small fw-bold text-wrap text-dark">
+                                                                        {{ notif.title }}</h6>
+                                                                    <p class="mb-0 small text-muted text-wrap">{{
+                                                                        notif.message }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                        <button type="button"
+                                                            class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                            data-id="{{ notif.id }}" aria-label="Close"
+                                                            style="font-size: 0.65rem; z-index: 10;"></button>
+                                                    </li>
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    <li>
+                                                        <div class="dropdown-item text-center text-muted small py-3">
+                                                            No
+                                                            new alerts</div>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                            <div class="tab-pane fade" id="admin-reviews-tab" role="tabpanel">
+                                                <ul class="list-unstyled mb-0" id="adminReviewNotifList">
+                                                    {% set review_notifs = current_notifications |
+                                                    selectattr('type',
+                                                    'equalto', 'REVIEW') | list %}
+                                                    {% if review_notifs %}
+                                                    {% for notif in review_notifs %}
+                                                    <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                        <a class="dropdown-item border-bottom py-2 pe-5"
+                                                            href="{{ notif.link or '#' }}">
+                                                            <div class="d-flex align-items-start">
+                                                                <div class="avatar me-2 flex-shrink-0">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-secondary">
+                                                                        <i
+                                                                            class="bx bx-comment-detail text-warning"></i>
+                                                                    </span>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="mb-1 small fw-bold text-wrap text-dark">
+                                                                        {{ notif.title }}</h6>
+                                                                    <p class="mb-0 small text-muted text-wrap">{{
+                                                                        notif.message }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                        <button type="button"
+                                                            class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                            data-id="{{ notif.id }}" aria-label="Close"
+                                                            style="font-size: 0.65rem; z-index: 10;"></button>
+                                                    </li>
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    <li>
+                                                        <div class="dropdown-item text-center text-muted small py-3">
+                                                            No
+                                                            new reviews</div>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                            <div class="tab-pane fade" id="admin-system-tab" role="tabpanel">
+                                                <ul class="list-unstyled mb-0" id="adminSystemNotifList">
+                                                    {% set admin_sys_notifs = current_notifications |
+                                                    selectattr('type',
+                                                    'equalto', 'SYSTEM') | list %}
+                                                    {% if admin_sys_notifs %}
+                                                    {% for notif in admin_sys_notifs %}
+                                                    <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                        <a class="dropdown-item border-bottom py-2 pe-5"
+                                                            href="{{ notif.link or '#' }}">
+                                                            <div class="d-flex align-items-start">
+                                                                <div class="avatar me-2 flex-shrink-0">
+                                                                    <span
+                                                                        class="avatar-initial rounded bg-label-secondary">
+                                                                        <i class="bx bx-broadcast text-danger"></i>
+                                                                    </span>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="mb-1 small fw-bold text-wrap text-dark">
+                                                                        {{ notif.title }}</h6>
+                                                                    <p class="mb-0 small text-muted text-wrap">{{
+                                                                        notif.message }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                        <button type="button"
+                                                            class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                            data-id="{{ notif.id }}" aria-label="Close"
+                                                            style="font-size: 0.65rem; z-index: 10;"></button>
+                                                    </li>
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    <li>
+                                                        <div class="dropdown-item text-center text-muted small py-3">
+                                                            No
+                                                            new system alerts</div>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4 py-2 shadow-sm"
+                            role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-user me-2"></i>
+                                <div class="small fw-bold">Welcome, {{ session.get('username', 'Customer') }}</div>
+                            </div>
+                            <!-- Customer Notification Bell -->
+                            <div class="dropdown">
+                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
+                                    data-bs-toggle="dropdown" data-bs-auto-close="outside" id="custNotifBell">
+                                    <i class="bx bx-bell fs-4 text-primary position-relative">
+                                        {% set unread_cust = current_notifications | selectattr('is_read',
+                                        'equalto',
+                                        False) | list %}
+                                        <span
+                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white {% if unread_cust|length == 0 %}d-none{% endif %}"
+                                            id="custNotifBadge" style="font-size: 0.60rem; padding: 0.25em 0.4em;">
+                                            {{ unread_cust|length }}
+                                        </span>
+                                    </i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 350px;">
+                                    <li class="dropdown-header border-bottom p-3 text-center fw-bold">
+                                        <span><i class="bx bx-bell text-primary me-2"></i>Your Notifications</span>
+                                    </li>
+                                    <li class="p-0">
+                                        <ul class="nav nav-tabs nav-fill px-3 pt-2" role="tablist">
+                                            <li class="nav-item">
+                                                <button type="button" class="nav-link active small py-2" role="tab"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#cust-orders-tab">Orders</button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button type="button" class="nav-link small py-2" role="tab"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#cust-system-tab">System</button>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content p-0" style="max-height: 350px; overflow-y: auto;">
+                                            <div class="tab-pane fade show active" id="cust-orders-tab" role="tabpanel">
+                                                <ul class="list-unstyled mb-0" id="custNotifList">
+                                                    {% set order_notifs = current_notifications | selectattr('type',
+                                                    'in', ['ORDER_STATUS', 'PAYMENT_STATUS']) | list %}
+                                                    {% if order_notifs %}
+                                                    {% for notif in order_notifs %}
+                                                    <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                        <a class="dropdown-item border-bottom py-2 pe-5"
+                                                            href="{{ notif.link or '#' }}">
+                                                            <div class="d-flex align-items-start">
+                                                                <i
+                                                                    class="bx fs-4 me-2 mt-1 {% if notif.type == 'ORDER_STATUS' %}bx-package text-primary{% else %}bx-credit-card text-success{% endif %}"></i>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="mb-1 small fw-bold text-wrap text-dark">
+                                                                        {{ notif.title }}</h6>
+                                                                    <p class="mb-0 small text-muted text-wrap">{{
+                                                                        notif.message }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                        <button type="button"
+                                                            class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                            data-id="{{ notif.id }}" aria-label="Close"
+                                                            style="font-size: 0.65rem; z-index: 10;"></button>
+                                                    </li>
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    <li>
+                                                        <div class="dropdown-item text-center text-muted small py-3">
+                                                            No
+                                                            recent orders</div>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                            <div class="tab-pane fade" id="cust-system-tab" role="tabpanel">
+                                                <ul class="list-unstyled mb-0" id="custSystemNotifList">
+                                                    {% set sys_notifs = current_notifications | rejectattr('type',
+                                                    'in',
+                                                    ['ORDER_STATUS', 'PAYMENT_STATUS']) | list %}
+                                                    {% if sys_notifs %}
+                                                    {% for notif in sys_notifs %}
+                                                    <li id="notif-item-{{ notif.id }}" class="position-relative">
+                                                        <a class="dropdown-item border-bottom py-2 pe-5"
+                                                            href="{{ notif.link or '#' }}">
+                                                            <div class="d-flex align-items-start">
+                                                                <i
+                                                                    class="bx fs-4 me-2 mt-1 {% if notif.type == 'SALE' %}bx-broadcast text-danger{% else %}bx-bell text-secondary{% endif %}"></i>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="mb-1 small fw-bold text-wrap text-dark">
+                                                                        {{ notif.title }}</h6>
+                                                                    <p class="mb-0 small text-muted text-wrap">{{
+                                                                        notif.message }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                        <button type="button"
+                                                            class="btn-close position-absolute top-50 end-0 translate-middle-y me-3 delete-notif-btn"
+                                                            data-id="{{ notif.id }}" aria-label="Close"
+                                                            style="font-size: 0.65rem; z-index: 10;"></button>
+                                                    </li>
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    <li>
+                                                        <div class="dropdown-item text-center text-muted small py-3">
+                                                            No
+                                                            new system alerts</div>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show"
+                            role="alert">
+                            {{ message|safe }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        {% block content %}{% endblock %}
+
+                    </div>
+
+                    <footer class="content-footer footer bg-footer-theme text-center py-3">
+                        <div class="container-xxl">
+                            <div class="mb-1">
+                                <a href="{{ url_for('system.about') }}"
+                                    class="text-muted text-decoration-none small me-3">About Us</a>
+                                <a href="{{ url_for('system.support') }}"
+                                    class="text-muted text-decoration-none small">Support</a>
+                            </div>
+                            &copy; 2026 <strong>SnapShop</strong> | All Rights Reserved
+                        </div>
+                    </footer>
                 </div>
+            </div>
 
         </div>
     </div>
