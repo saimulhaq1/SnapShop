@@ -446,3 +446,85 @@
     width: 100%;
     table-layout: auto;
 }
+
+/* ============================================================
+   PRODUCT DETAIL - Rating Summary (Amazon Style)
+   ============================================================ */
+.rating-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #ebedf2;
+    border-radius: 8px;
+    background: #fff;
+    flex-wrap: wrap;
+}
+
+.rating-big {
+    text-align: center;
+    min-width: 120px;
+}
+
+.rating-number {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #333;
+}
+
+.rating-stars {
+    color: #ffb400;
+    font-size: 1.2rem;
+    margin: 5px 0;
+}
+
+.rating-count {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.rating-bars {
+    flex-grow: 1;
+    min-width: 250px;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+.bar-label {
+    min-width: 35px;
+    color: #555;
+    font-weight: 600;
+}
+
+.bar-label i {
+    color: #ffb400;
+    font-size: 0.8rem;
+}
+
+.bar-track {
+    flex-grow: 1;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: #ffb400;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.bar-count {
+    min-width: 30px;
+    text-align: right;
+    color: #6c757d;
+}
