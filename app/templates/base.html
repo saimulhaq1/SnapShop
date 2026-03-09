@@ -16,14 +16,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/core.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/theme.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/demo.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/core.css') }}?v=3.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/theme-default.css') }}?v=3.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/demo.css') }}?v=3.0">
     <link rel="stylesheet"
         href="{{ url_for('static', filename='assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}">
 
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.0">
 
     <script src="{{ url_for('static', filename='assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/config.js') }}"></script>
@@ -679,8 +679,7 @@
     <script src="{{ url_for('static', filename='assets/vendor/js/menu.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/theme-default.css') }}"
-        class="template-customizer-theme-css" />
+
 
     {% block extra_scripts %}{% endblock %}
 
