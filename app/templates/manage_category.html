@@ -66,6 +66,15 @@
                             <input type="file" class="form-control" name="image" id="image" accept="image/*" />
                         </div>
                         <small class="text-muted">Used for dynamic display on the homepage.</small>
+
+                        <!-- Image Preview Box -->
+                        <div id="cat-preview-container"
+                            class="p-2 border rounded bg-light text-center mt-3 {% if not category.image %}d-none{% endif %}">
+                            <small class="d-block mb-2 fw-bold text-muted">Preview</small>
+                            <img id="cat-preview-img"
+                                src="{% if category.image %}{{ url_for('static', filename='assets/img/categories/' + category.image) }}{% endif %}"
+                                style="max-width: 100%; max-height: 120px;" class="rounded shadow-sm">
+                        </div>
                     </div>
 
                     <div class="mb-3 col-md-3">
@@ -104,5 +113,29 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var imageInput = document.getElementById('image');
+        var previewContainer = document.getElementById('cat-preview-container');
+        var previewImg = document.getElementById('cat-preview-img');
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        if (previewImg) {
+                            previewImg.src = e.target.result;
+                        }
+                        if (previewContainer) {
+                            previewContainer.classList.remove('d-none');
+                        }
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    });
+</script>
 
 {% endblock %}
