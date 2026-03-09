@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, url_for
 from datetime import datetime
 from app import db
 from app.models import Payment, PaymentStatus, Notification
@@ -15,7 +15,9 @@ def update_payment_status(id):
         return jsonify(success=False, message="Unauthorized"), 403
 
     payment = Payment.query.get_or_404(id)
-    status_name = request.form.get('status')
+    
+    data = request.get_json() or {}
+    status_name = data.get('status')
 
     if status_name in PaymentStatus.__members__:
         payment.status = PaymentStatus[status_name]
