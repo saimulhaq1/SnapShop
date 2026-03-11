@@ -235,6 +235,8 @@ snapshop/
 
 ### Prerequisites
 - Python 3.8+
+- MySQL
+- Flask
 - pip
 - Git
 
